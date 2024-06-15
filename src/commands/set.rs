@@ -40,23 +40,19 @@ impl Apply for Set {
             When::Always => (),
         }
 
-        let mut result = None;
-        if self.get {
-            result = store.get(&self.key).map(|value| value.clone());
-        }
-
         match self.expire {
             Expire::Keep => (),
             Expire::Never => store.keep_forever(&self.key),
             Expire::At(at) => store.expire_at(&self.key, &at),
         }
-        store.set(&self.key, &self.value);
 
-        if let Some(value) = result {
-            client.write_bulk_string(&value, registry)
-        } else {
-            client.write_ok(registry)
+        if let Some(previous) = store.set(&self.key, &self.value) {
+            if self.get {
+                return client.write_bulk_string(previous.as_str(), registry);
+            }
         }
+
+        client.write_ok(registry)
     }
 }
 

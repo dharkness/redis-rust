@@ -18,8 +18,8 @@ impl Store {
         }
     }
 
-    pub fn set(&mut self, key: &String, value: &String) {
-        self.values.insert(key.clone(), value.clone());
+    pub fn set(&mut self, key: &String, value: &String) -> Option<String> {
+        self.values.insert(key.clone(), value.clone())
     }
 
     pub fn remove(&mut self, key: &String) -> bool {
