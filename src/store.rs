@@ -49,6 +49,10 @@ impl Store {
         }
     }
 
+    pub fn expires(&mut self, key: &String) -> Option<&DateTime<Utc>> {
+        self.expirations.get(key).map(|(_, at)| at)
+    }
+
     pub fn keep_forever(&mut self, key: &String) {
         self.expirations.remove(key);
     }

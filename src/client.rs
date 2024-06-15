@@ -7,7 +7,7 @@ use mio::{Interest, Registry, Token};
 use mio::event::Source;
 
 use crate::{interrupted, would_block};
-use crate::commands::Parser;
+use crate::parser::Parser;
 use crate::store::Store;
 
 pub struct Client {

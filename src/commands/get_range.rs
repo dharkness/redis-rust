@@ -1,10 +1,4 @@
-use std::io;
-
-use mio::Registry;
-
-use crate::client::Client;
-use super::input::Input;
-use super::parser::{Command, TryParse};
+use super::prelude::*;
 
 struct GetRange {
     key: String,
@@ -19,7 +13,7 @@ impl GetRange {
 }
 
 impl Command for GetRange {
-    fn apply(&self, store: &mut crate::store::Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         let substring = if let Some(value) = store.get(&self.key) {
             let len = value.len() as i64;
             let mut start = if self.start < 0 {
@@ -32,7 +26,7 @@ impl Command for GetRange {
             } else {
                 self.end
             };
-            
+
             if start < 0 {
                 start = 0;
             } else if start > len {
@@ -43,7 +37,7 @@ impl Command for GetRange {
             } else if end > len {
                 end = len;
             }
-            
+
             if end > start {
                 value[start as usize..end as usize].to_string()
             } else {
@@ -70,7 +64,7 @@ impl TryParse for GetRangeParser {
         let key = input.next()?;
         let start = input.next()?.parse::<i64>().map_err(|_| "invalid start".to_string())?;
         let end = input.next()?.parse::<i64>().map_err(|_| "invalid end".to_string())?;
-        
+
         Ok(Box::new(GetRange::new(key, start, end)))
     }
 }

@@ -1,10 +1,4 @@
-use std::io;
-
-use mio::Registry;
-
-use crate::client::Client;
-use super::input::Input;
-use super::parser::{Command, TryParse};
+use super::prelude::*;
 
 struct StrLen {
     key: String,
@@ -17,7 +11,7 @@ impl StrLen {
 }
 
 impl Command for StrLen {
-    fn apply(&self, store: &mut crate::store::Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         if let Some(value) = store.get(&self.key) {
             client.write_integer(value.len() as i64, registry)
         } else {

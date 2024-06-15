@@ -9,6 +9,8 @@ mod resp;
 mod client;
 mod store;
 mod commands;
+mod input;
+mod parser;
 
 use std::collections::HashMap;
 use std::io;
@@ -17,10 +19,9 @@ use mio::event::Event;
 use mio::net::{TcpListener};
 use mio::{Events, Interest, Poll, Registry, Token};
 
-use crate::commands::Parser;
-use crate::store::Store;
-
 use client::Client;
+use parser::Parser;
+use store::Store;
 
 const SERVER: Token = Token(0);
 

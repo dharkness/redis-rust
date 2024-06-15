@@ -4,9 +4,8 @@ use mio::Registry;
 
 use crate::client::Client;
 use crate::commands::get_commands;
+use crate::input::Input;
 use crate::store::Store;
-
-use super::input::Input;
 
 pub struct Parser {
     parsers: HashMap<&'static str, Box<dyn TryParse>>
@@ -18,7 +17,7 @@ impl Parser {
             parsers: HashMap::from(get_commands()),
         }
     }
-    
+
     pub fn try_next_input(&self, buffer: &String, start: &mut usize) -> Result<Option<Input>, String> {
         if buffer.is_empty() {
             return Ok(None);
@@ -26,7 +25,7 @@ impl Parser {
         if buffer.as_bytes()[*start] != b'*' {
             return Err("expected '*'".to_string());
         }
-        
+
         let mut index = *start;
         if let Some(end) = buffer[index..].find("\r\n") {
             // println!("end: {}", end);
@@ -42,7 +41,7 @@ impl Parser {
                     return Ok(None)
                 }
             }
-            
+
             *start = index;
             Ok(Some(Input::new(tokens)))
         } else {
@@ -54,7 +53,7 @@ impl Parser {
         if buffer.as_bytes()[*index] != b'$' {
             return Err("expected '$'".to_string());
         }
-        
+
         if let Some(end) = buffer[*index..].find("\r\n") {
             let part = &buffer[*index+1..*index+end];
             let len = part.parse::<usize>().map_err(|_| "invalid bulk string length".to_string())?;
@@ -62,7 +61,7 @@ impl Parser {
             if len > buffer.len() - (start + 2) {
                 return Ok(None)
             }
-            
+
             *index = start + len + 2;
             Ok(Some(buffer[start..start+len].to_string()))
         } else {
@@ -74,7 +73,7 @@ impl Parser {
         let command = input.next_token()?;
         println!("command: {}", command);
         let parser = self.parsers.get(command.as_str()).ok_or("unknown command".to_string())?;
-        
+
         parser.try_parse(&mut input)
     }
 }

@@ -1,10 +1,4 @@
-use std::io;
-
-use mio::Registry;
-
-use crate::client::Client;
-use super::input::Input;
-use super::parser::{Command, TryParse};
+use super::prelude::*;
 
 struct GetDel {
     key: String,
@@ -17,7 +11,7 @@ impl GetDel {
 }
 
 impl Command for GetDel {
-    fn apply(&self, store: &mut crate::store::Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         if let Some(value) = store.get_and_remove(&self.key) {
             client.write_bulk_string(&value, registry)
         } else {

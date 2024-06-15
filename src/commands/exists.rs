@@ -1,10 +1,4 @@
-use std::io;
-
-use mio::Registry;
-
-use crate::client::Client;
-use super::input::Input;
-use super::parser::{Command, TryParse};
+use super::prelude::*;
 
 struct Exists {
     keys: Vec<String>,
@@ -17,9 +11,9 @@ impl Exists {
 }
 
 impl Command for Exists {
-    fn apply(&self, store: &mut crate::store::Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         client.write_integer(
-            self.keys.iter().filter(|key| store.contains_key(key)).count() as i64, 
+            self.keys.iter().filter(|key| store.contains_key(key)).count() as i64,
             registry,
         )
     }

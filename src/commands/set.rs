@@ -1,12 +1,8 @@
-use std::io;
+use std::time::Duration;
 
-use mio::Registry;
+use chrono::{DateTime, Utc};
 
-use crate::client::Client;
-use super::expire::Expire;
-use super::input::Input;
-use super::parser::{Command, mutate, Mutators, TryParse};
-use super::when::When;
+use super::prelude::*;
 
 struct Set {
     key: String,
@@ -23,7 +19,7 @@ impl Set {
 }
 
 impl Command for Set {
-    fn apply(&self, store: &mut crate::store::Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         match self.when {
             When::Exists => if !store.contains_key(&self.key) {
                 return client.write_null(registry);
@@ -95,5 +91,54 @@ impl TryParse for SetParser {
         let value = input.next()?;
 
         Ok(Box::new(mutate("SET", &self.mutators, input, Set::new(key, value))?))
+    }
+}
+
+enum When {
+    Always,
+    Exists,
+    NotExists,
+}
+
+enum Expire {
+    At(DateTime<Utc>),
+    Keep,
+    Never,
+}
+
+impl Expire {
+    pub fn try_parse(token: &str, input: &mut Input) -> Result<Self, String> {
+        let time = input.next_int()?;
+        let at = match token {
+            "EX" => {
+                Utc::now() + Duration::new(time, 0)
+            }
+            "PX" => {
+                let duration = if time >= 1_000 {
+                    let secs = time / 1_000;
+                    Duration::new(secs as u64, (time % 1_000) as u32 * 1_000_000)
+                } else {
+                    Duration::new(0, time as u32 * 1_000_000)
+                };
+                Utc::now() + duration
+            }
+            "EXAT" => {
+                match DateTime::from_timestamp_millis(1_000 * time as i64) {
+                    Some(at) => at,
+                    _ => return Err("invalid unix timestamp".to_string()),
+                }
+            }
+            "PXAT" => {
+                match DateTime::from_timestamp_millis(time as i64) {
+                    Some(at) => at,
+                    _ => return Err("invalid unix timestamp".to_string()),
+                }
+            }
+            "KEEPTTL" => return Ok(Expire::Keep),
+            _ => return Err("invalid expiration code".to_string()),
+        };
+
+        println!("expires at {}", at.format("%Y-%m-%d %H:%M:%S"));
+        Ok(Expire::At(at))
     }
 }

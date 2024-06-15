@@ -1,10 +1,4 @@
-use std::io;
-
-use mio::Registry;
-
-use crate::client::Client;
-use super::input::Input;
-use super::parser::{Command, mutate, Mutators, TryParse};
+use super::prelude::*;
 
 struct Copy {
     source: String,
@@ -19,7 +13,7 @@ impl Copy {
 }
 
 impl Command for Copy {
-    fn apply(&self, store: &mut crate::store::Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         if (self.replace || !store.contains_key(&self.destination))
             && store.copy(&self.source, &self.destination)
         {

@@ -1,11 +1,6 @@
-use std::io;
 use std::ops::Add;
 
-use mio::Registry;
-
-use crate::client::Client;
-use super::input::Input;
-use super::parser::{Command, TryParse};
+use super::prelude::*;
 
 struct Append {
     key: String,
@@ -19,7 +14,7 @@ impl Append {
 }
 
 impl Command for Append {
-    fn apply(&self, store: &mut crate::store::Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         let new_value = if let Some(current) = store.get(&self.key) {
             current.clone().add(&self.value)
         } else {

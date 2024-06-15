@@ -1,10 +1,4 @@
-use std::io;
-
-use mio::Registry;
-
-use crate::client::Client;
-use super::input::Input;
-use super::parser::{Command, TryParse};
+use super::prelude::*;
 
 struct SetMultiple {
     key_value_pairs: Vec<String>,
@@ -17,7 +11,7 @@ impl SetMultiple {
 }
 
 impl Command for SetMultiple {
-    fn apply(&self, store: &mut crate::store::Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         if self.key_value_pairs.len() % 2 != 0 {
             client.write_simple_error("wrong number of MSET arguments", registry)
         } else {
