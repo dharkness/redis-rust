@@ -135,12 +135,12 @@ pub trait TryParse {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String>;
 }
 
-pub type Mutator<T> = fn(&mut T, &String, &mut Input) -> Result<(), String>;
-pub type Mutators<T> = Vec<(Vec<&'static str>, Mutator<T>)>;
+pub type ParseOption<T> = fn(&mut T, &String, &mut Input) -> Result<(), String>;
+pub type Options<T> = Vec<(Vec<&'static str>, ParseOption<T>)>;
 
-pub fn mutate<T>(
+pub fn parse_options<T>(
     command: &str,
-    mutators: &Vec<(Vec<&'static str>, Mutator<T>)>,
+    options: &Vec<(Vec<&'static str>, ParseOption<T>)>,
     input: &mut Input,
     mut target: T,
 ) -> Result<T, String> {
@@ -150,7 +150,7 @@ pub fn mutate<T>(
         let token = input.next_token().unwrap();
 
         println!("token: {}", token);
-        for (ref tokens, ref op) in mutators {
+        for (ref tokens, ref op) in options {
             println!("tokens: {:?}", tokens);
             if tokens.contains(&token.as_str()) {
                 if used_ops.contains(&op) {

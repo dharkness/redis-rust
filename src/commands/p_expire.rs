@@ -6,13 +6,13 @@ use super::expire::{Expire, ExpireParser};
 use super::prelude::*;
 
 pub struct PExpireParser {
-    mutators: Mutators<Expire>,
+    options: Options<Expire>,
 }
 
 impl PExpireParser {
     pub fn new() -> Self {
         Self {
-            mutators: vec![(vec!["NX", "XX", "LT", "GT"], PExpireParser::try_expiry)],
+            options: vec![(vec!["NX", "XX", "LT", "GT"], PExpireParser::try_expiry)],
         }
     }
 
@@ -30,9 +30,9 @@ impl TryParse for PExpireParser {
             return Err("invalid PEXPIRE milliseconds".to_string());
         }
 
-        Ok(Box::new(mutate(
+        Ok(Box::new(parse_options(
             "PEXPIRE",
-            &self.mutators,
+            &self.options,
             input,
             Expire::new(
                 key,

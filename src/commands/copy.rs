@@ -29,13 +29,13 @@ impl Apply for Copy {
 }
 
 pub struct CopyParser {
-    mutators: Mutators<Copy>,
+    options: Options<Copy>,
 }
 
 impl CopyParser {
     pub fn new() -> Self {
         Self {
-            mutators: vec![(vec!["REPLACE"], CopyParser::try_replace)],
+            options: vec![(vec!["REPLACE"], CopyParser::try_replace)],
         }
     }
 
@@ -50,9 +50,9 @@ impl TryParse for CopyParser {
         let source = input.next_string()?;
         let destination = input.next_string()?;
 
-        Ok(Box::new(mutate(
+        Ok(Box::new(parse_options(
             "COPY",
-            &self.mutators,
+            &self.options,
             input,
             Copy::new(source, destination),
         )?))

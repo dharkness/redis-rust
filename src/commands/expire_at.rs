@@ -4,13 +4,13 @@ use super::expire::{Expire, ExpireParser};
 use super::prelude::*;
 
 pub struct ExpireAtParser {
-    mutators: Mutators<Expire>,
+    options: Options<Expire>,
 }
 
 impl ExpireAtParser {
     pub fn new() -> Self {
         Self {
-            mutators: vec![(vec!["NX", "XX", "LT", "GT"], ExpireAtParser::try_expiry)],
+            options: vec![(vec!["NX", "XX", "LT", "GT"], ExpireAtParser::try_expiry)],
         }
     }
 
@@ -24,9 +24,9 @@ impl TryParse for ExpireAtParser {
         let key = input.next_string()?;
         let unix_time_seconds = input.next_int()?;
 
-        Ok(Box::new(mutate(
+        Ok(Box::new(parse_options(
             "EXPIREAT",
-            &self.mutators,
+            &self.options,
             input,
             Expire::new(
                 key,

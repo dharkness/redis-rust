@@ -69,13 +69,13 @@ impl Apply for Set {
 }
 
 pub struct SetParser {
-    mutators: Mutators<Set>,
+    options: Options<Set>,
 }
 
 impl SetParser {
     pub fn new() -> Self {
         Self {
-            mutators: vec![
+            options: vec![
                 (vec!["NX", "XX"], SetParser::try_when),
                 (vec!["GET"], SetParser::try_get),
                 (
@@ -111,9 +111,9 @@ impl TryParse for SetParser {
         let key = input.next_string()?;
         let value = input.next_string()?;
 
-        Ok(Box::new(mutate(
+        Ok(Box::new(parse_options(
             "SET",
-            &self.mutators,
+            &self.options,
             input,
             Set::new(key, value),
         )?))

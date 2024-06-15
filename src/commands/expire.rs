@@ -45,13 +45,13 @@ impl Apply for Expire {
 }
 
 pub struct ExpireParser {
-    mutators: Mutators<Expire>,
+    options: Options<Expire>,
 }
 
 impl ExpireParser {
     pub fn new() -> Self {
         Self {
-            mutators: vec![(vec!["NX", "XX", "LT", "GT"], ExpireParser::try_expiry)],
+            options: vec![(vec!["NX", "XX", "LT", "GT"], ExpireParser::try_expiry)],
         }
     }
 
@@ -76,9 +76,9 @@ impl TryParse for ExpireParser {
             return Err("invalid EXPIRE seconds".to_string());
         }
 
-        Ok(Box::new(mutate(
+        Ok(Box::new(parse_options(
             "EXPIRE",
-            &self.mutators,
+            &self.options,
             input,
             Expire::new(key, Utc::now() + Duration::new(seconds as u64, 0)),
         )?))
