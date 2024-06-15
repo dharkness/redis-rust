@@ -1,6 +1,4 @@
-use std::time::Duration;
-
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 
 use super::prelude::*;
 
@@ -9,7 +7,7 @@ struct Set {
     value: String,
     when: When,
     get: bool,
-    expire: Expire,
+    expire: Expiration,
 }
 
 impl Set {
@@ -19,7 +17,7 @@ impl Set {
             value,
             when: When::Always,
             get: false,
-            expire: Expire::Never,
+            expire: Expiration::Never,
         }
     }
 }
@@ -41,11 +39,11 @@ impl Apply for Set {
         }
 
         match self.expire {
-            Expire::Keep => (),
-            Expire::Never => {
+            Expiration::Keep => (),
+            Expiration::Never => {
                 store.persist(&self.key);
             }
-            Expire::At(at) => {
+            Expiration::At(at) => {
                 if at > Utc::now() {
                     store.expire_at(&self.key, &at);
                 } else {
@@ -101,7 +99,7 @@ impl SetParser {
     }
 
     fn try_expire(set: &mut Set, token: &String, input: &mut Input) -> Result<(), String> {
-        set.expire = Expire::try_parse(token, input)?;
+        set.expire = Expiration::try_parse(token, input)?;
         Ok(())
     }
 }
@@ -124,47 +122,4 @@ enum When {
     Always,
     Exists,
     NotExists,
-}
-
-enum Expire {
-    At(DateTime<Utc>),
-    Keep,
-    Never,
-}
-
-impl Expire {
-    pub fn try_parse(token: &str, input: &mut Input) -> Result<Self, String> {
-        if token == "KEEPTTL" {
-            return Ok(Expire::Keep);
-        }
-
-        let time = input.next_int()?;
-        if time <= 0 {
-            return Err("invalid SET time".to_string());
-        }
-
-        let at = match token {
-            "EX" => Utc::now() + Duration::new(time as u64, 0),
-            "PX" => {
-                Utc::now()
-                    + if time >= 1_000 {
-                        Duration::new(time as u64 / 1_000, (time % 1_000) as u32 * 1_000_000)
-                    } else {
-                        Duration::new(0, time as u32 * 1_000_000)
-                    }
-            }
-            "EXAT" => match DateTime::from_timestamp_millis(time * 1_000) {
-                Some(at) => at,
-                _ => return Err("invalid SET unix time seconds".to_string()),
-            },
-            "PXAT" => match DateTime::from_timestamp_millis(time) {
-                Some(at) => at,
-                _ => return Err("invalid SET unix time milliseconds".to_string()),
-            },
-            _ => return Err("invalid expiration code".to_string()),
-        };
-
-        println!("expires at {}", at.format("%Y-%m-%d %H:%M:%S"));
-        Ok(Expire::At(at))
-    }
 }

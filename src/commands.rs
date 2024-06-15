@@ -7,7 +7,7 @@ mod prelude {
 
     pub use crate::input::Input;
     pub use crate::network::Client;
-    pub use crate::parser::{Apply, Options, parse_options, TryParse};
+    pub use crate::parser::{Apply, Expiration, Options, parse_options, TryParse};
     pub use crate::store::Store;
 }
 
@@ -22,6 +22,7 @@ mod expire_at;
 mod expire_time;
 mod get;
 mod get_del;
+mod get_ex;
 mod get_range;
 mod p_expire;
 mod p_expire_at;
@@ -33,7 +34,7 @@ mod set_multiple;
 mod set_multiple_if_not_set;
 mod str_len;
 
-pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 21] {
+pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 22] {
     [
         ("APPEND", Box::new(append::AppendParser::new())),
         ("COMMAND", Box::new(command::CommandParser::new())),
@@ -46,6 +47,7 @@ pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 21] {
         ("EXPIRETIME", Box::new(expire_time::ExpireTimeParser::new())),
         ("GET", Box::new(get::GetParser::new())),
         ("GETDEL", Box::new(get_del::GetDelParser::new())),
+        ("GETEX", Box::new(get_ex::GetExParser::new())),
         ("GETRANGE", Box::new(get_range::GetRangeParser::new())),
         ("MSET", Box::new(set_multiple::SetMultipleParser::new())),
         (

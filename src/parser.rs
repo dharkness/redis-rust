@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 use std::io;
 use std::str::from_utf8;
+use std::time::Duration;
 
+use chrono::{DateTime, Utc};
 use mio::Registry;
 
 use crate::commands::get_commands;
@@ -167,6 +169,49 @@ pub fn parse_options<T>(
     }
 
     Ok(target)
+}
+
+pub enum Expiration {
+    At(DateTime<Utc>),
+    Keep,
+    Never,
+}
+
+impl Expiration {
+    pub fn try_parse(token: &str, input: &mut Input) -> Result<Self, String> {
+        if token == "KEEPTTL" {
+            return Ok(Expiration::Keep);
+        }
+
+        let time = input.next_int()?;
+        if time <= 0 {
+            return Err("invalid SET time".to_string());
+        }
+
+        let at = match token {
+            "EX" => Utc::now() + Duration::new(time as u64, 0),
+            "PX" => {
+                Utc::now()
+                    + if time >= 1_000 {
+                        Duration::new(time as u64 / 1_000, (time % 1_000) as u32 * 1_000_000)
+                    } else {
+                        Duration::new(0, time as u32 * 1_000_000)
+                    }
+            }
+            "EXAT" => match DateTime::from_timestamp_millis(time * 1_000) {
+                Some(at) => at,
+                _ => return Err("invalid SET unix time seconds".to_string()),
+            },
+            "PXAT" => match DateTime::from_timestamp_millis(time) {
+                Some(at) => at,
+                _ => return Err("invalid SET unix time milliseconds".to_string()),
+            },
+            _ => return Err("invalid expiration code".to_string()),
+        };
+
+        println!("expires at {}", at.format("%Y-%m-%d %H:%M:%S"));
+        Ok(Expiration::At(at))
+    }
 }
 
 struct CommandTree {
