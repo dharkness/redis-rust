@@ -8,8 +8,8 @@ mod prelude {
     pub use mio::Registry;
 
     pub use crate::network::Client;
-    pub use crate::parse::{Apply, Expiration, Input, Options, parse_options, Pattern, TryParse};
-    pub use crate::store::Store;
+    pub use crate::parse::{Apply, Expiration, Input, Options, parse_options, TryParse};
+    pub use crate::store::{Pattern, Store};
 }
 
 mod append;
