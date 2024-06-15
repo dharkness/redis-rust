@@ -19,7 +19,10 @@ fn main() {
                             if len == 0 {
                                 break;
                             }
-                            _stream.write_all(b"+PONG\r\n").expect("write failed");
+                            println!("received: {}", line.trim());
+                            if len >= 4 && &line[..4] == "PING" {
+                                _stream.write_all(b"+PONG\r\n").expect("write failed");
+                            }
                         }
                         Err(e) => {
                             println!("error reading: {}", e);
