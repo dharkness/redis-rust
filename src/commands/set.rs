@@ -126,13 +126,13 @@ impl Expire {
         let at = match token {
             "EX" => Utc::now() + Duration::new(time, 0),
             "PX" => {
-                let duration = if time >= 1_000 {
-                    let secs = time / 1_000;
-                    Duration::new(secs as u64, (time % 1_000) as u32 * 1_000_000)
-                } else {
-                    Duration::new(0, time as u32 * 1_000_000)
-                };
-                Utc::now() + duration
+                Utc::now()
+                    + if time >= 1_000 {
+                        let secs = time / 1_000;
+                        Duration::new(secs as u64, (time % 1_000) as u32 * 1_000_000)
+                    } else {
+                        Duration::new(0, time as u32 * 1_000_000)
+                    }
             }
             "EXAT" => match DateTime::from_timestamp_millis(1_000 * time as i64) {
                 Some(at) => at,
