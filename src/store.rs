@@ -22,12 +22,20 @@ impl Store {
         self.values.insert(key.clone(), value.clone());
     }
 
-    pub fn contains_key(&mut self, key: &String) -> bool {
+    pub fn remove(&mut self, key: &String) {
+        self.values.remove(key);
+    }
+
+    pub fn contains_key(&self, key: &String) -> bool {
         self.values.contains_key(key)
     }
 
-    pub fn get(&mut self, key: &String) -> Option<&String> {
+    pub fn get(&self, key: &String) -> Option<&String> {
         self.values.get(key)
+    }
+
+    pub fn get_and_remove(&mut self, key: &String) -> Option<String> {
+        self.values.remove(key)
     }
 
     pub fn keep_forever(&mut self, key: &String) {

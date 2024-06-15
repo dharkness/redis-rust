@@ -4,6 +4,7 @@ use mio::Registry;
 use crate::client::Client;
 
 use crate::commands::get::GetParser;
+use crate::commands::get_del::GetDelParser;
 use crate::commands::set::SetParser;
 use crate::store::Store;
 use super::input::Input;
@@ -14,8 +15,9 @@ pub struct Parser {
 
 impl Parser {
     pub fn new() -> Self {
-        let commands: [(&'static str, Box<dyn TryParse>); 2] = [
+        let commands: [(&'static str, Box<dyn TryParse>); 3] = [
             ("GET", Box::new(GetParser::new())),
+            ("GETDEL", Box::new(GetDelParser::new())),
             ("SET", Box::new(SetParser::new()))
         ];
         Self {
