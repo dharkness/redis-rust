@@ -61,7 +61,7 @@ impl GetRangeParser {
 
 impl TryParse for GetRangeParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
-        let key = input.next()?;
+        let key = input.next_string()?;
         let start = input
             .next()?
             .parse::<i64>()

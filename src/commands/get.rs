@@ -30,6 +30,6 @@ impl GetParser {
 
 impl TryParse for GetParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
-        Ok(Box::new(Get::new(input.next()?)))
+        Ok(Box::new(Get::new(input.next_string()?)))
     }
 }

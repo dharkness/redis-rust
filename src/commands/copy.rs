@@ -39,19 +39,19 @@ impl CopyParser {
         }
     }
 
-    fn try_replace(set: &mut Copy, _: &String, _: &mut Input) -> Result<(), String> {
-        set.replace = true;
+    fn try_replace(copy: &mut Copy, _: &String, _: &mut Input) -> Result<(), String> {
+        copy.replace = true;
         Ok(())
     }
 }
 
 impl TryParse for CopyParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
-        let source = input.next()?;
-        let destination = input.next()?;
+        let source = input.next_string()?;
+        let destination = input.next_string()?;
 
         Ok(Box::new(mutate(
-            "SET",
+            "COPY",
             &self.mutators,
             input,
             Copy::new(source, destination),

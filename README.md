@@ -20,9 +20,9 @@ event loops, the Redis protocol and more.
 # Next Steps
 
 - Parse raw buffer
-    - Read directly into incoming as a buffer (keep index)
+    - Read directly into incoming buffer (done)
     - Parse from buffer without converting to a string (done)
-    - Input uses byte slices
+    - Input uses byte slices (done)
     - Parser uses tree of letters to find command
     - Store uses byte slices
 - Move command running to server

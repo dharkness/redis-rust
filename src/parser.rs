@@ -20,7 +20,10 @@ impl Parser {
         }
     }
 
-    pub fn try_next_input(&self, buffer: &[u8]) -> Result<Option<(Input, usize)>, String> {
+    pub fn try_next_input<'a>(
+        &self,
+        buffer: &'a [u8],
+    ) -> Result<Option<(Input<'a>, usize)>, String> {
         if buffer.is_empty() {
             return Ok(None);
         }
@@ -40,7 +43,7 @@ impl Parser {
             for _ in 0..len {
                 if let Some((token, end)) = self.try_next_token(&buffer[index..])? {
                     index += end;
-                    tokens.push(from_utf8(token).unwrap().to_string());
+                    tokens.push(token);
                 } else {
                     return Ok(None);
                 }
@@ -52,7 +55,7 @@ impl Parser {
         }
     }
 
-    fn try_next_token<'a>(&self, buffer: &'a [u8]) -> Result<Option<(&'a [u8], usize)>, String> {
+    fn try_next_token<'a>(&self, buffer: &'a [u8]) -> Result<Option<(&'a str, usize)>, String> {
         if buffer.is_empty() {
             return Ok(None);
         }
@@ -71,7 +74,7 @@ impl Parser {
             }
 
             Ok(Some((
-                &buffer[start..start + len as usize],
+                from_utf8(&buffer[start..start + len as usize]).map_err(|e| e.to_string())?,
                 start + len as usize + 2,
             )))
         } else {
@@ -101,11 +104,11 @@ fn find_cr_lf(buffer: &[u8]) -> Option<usize> {
     None
 }
 
-fn parse_integer(byte_slice: &[u8]) -> Result<i64, String> {
+pub fn parse_integer(buffer: &[u8]) -> Result<i64, String> {
     let mut result: i64 = 0;
     let mut negative = false;
 
-    for (i, &byte) in byte_slice.iter().enumerate() {
+    for (i, &byte) in buffer.iter().enumerate() {
         if i == 0 && byte == b'-' {
             negative = true;
             continue;
@@ -139,25 +142,24 @@ pub fn mutate<T>(
     mut target: T,
 ) -> Result<T, String> {
     let iter = &mut mutators.iter();
+    let mut extra = None;
 
-    while input.has_next() {
+    'outer: while input.has_next() {
         let token = input.next_token().unwrap();
 
-        while let Some((tokens, op)) = iter.next() {
+        for (tokens, op) in &iter.next() {
             if tokens.contains(&token.as_str()) {
                 op(&mut target, &token, input)?;
-                break;
+                continue 'outer;
             }
         }
+
+        extra = Some(token);
+        break;
     }
 
-    if input.has_next() {
-        Err(format!(
-            "unexpected {} token {}",
-            command,
-            input.next_token().unwrap()
-        )
-        .to_string())
+    if let Some(token) = extra {
+        Err(format!("unexpected {} token {}", command, token))
     } else {
         Ok(target)
     }

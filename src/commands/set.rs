@@ -100,8 +100,8 @@ impl SetParser {
 
 impl TryParse for SetParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
-        let key = input.next()?;
-        let value = input.next()?;
+        let key = input.next_string()?;
+        let value = input.next_string()?;
 
         Ok(Box::new(mutate(
             "SET",
@@ -126,7 +126,7 @@ enum Expire {
 
 impl Expire {
     pub fn try_parse(token: &str, input: &mut Input) -> Result<Self, String> {
-        let time = input.next_int()?;
+        let time = input.next_int()? as u64;
         let at = match token {
             "EX" => Utc::now() + Duration::new(time, 0),
             "PX" => {

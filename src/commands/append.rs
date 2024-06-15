@@ -35,6 +35,9 @@ impl AppendParser {
 
 impl TryParse for AppendParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
-        Ok(Box::new(Append::new(input.next()?, input.next()?)))
+        Ok(Box::new(Append::new(
+            input.next_string()?,
+            input.next_string()?,
+        )))
     }
 }

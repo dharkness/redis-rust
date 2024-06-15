@@ -30,6 +30,6 @@ impl GetDelParser {
 
 impl TryParse for GetDelParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
-        Ok(Box::new(GetDel::new(input.next()?)))
+        Ok(Box::new(GetDel::new(input.next_string()?)))
     }
 }

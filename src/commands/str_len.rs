@@ -30,6 +30,6 @@ impl StrLenParser {
 
 impl TryParse for StrLenParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
-        Ok(Box::new(StrLen::new(input.next()?)))
+        Ok(Box::new(StrLen::new(input.next_string()?)))
     }
 }
