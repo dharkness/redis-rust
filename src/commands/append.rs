@@ -26,7 +26,7 @@ impl Command for Append {
             self.value.clone()
         };
         store.set(&self.key, &new_value);
-        client.write_integer(new_value.len() as u64, registry)
+        client.write_integer(new_value.len() as i64, registry)
     }
 }
 

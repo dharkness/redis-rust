@@ -19,7 +19,7 @@ impl StrLen {
 impl Command for StrLen {
     fn apply(&self, store: &mut crate::store::Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         if let Some(value) = store.get(&self.key) {
-            client.write_integer(value.len() as u64, registry)
+            client.write_integer(value.len() as i64, registry)
         } else {
             client.write_integer(0, registry)
         }
