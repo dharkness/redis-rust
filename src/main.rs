@@ -149,6 +149,10 @@ fn process_command(registry: &Registry, client: &mut Client, store: &mut Store, 
             store.set(key, value);
             client.write(b"+OK\r\n", registry)?;
         }
+        Command::SetExpiry(key, value, ms) => {
+            store.set_with_expiration(key, value, ms);
+            client.write(b"+OK\r\n", registry)?;
+        }
     }
     Ok(())
 }

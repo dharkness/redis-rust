@@ -35,16 +35,31 @@ impl Value {
                         }
                     }
                     "SET" => {
-                        if values.len() != 3 {
-                            return Err("expected 2 arguments for SET".to_string());
+                        if values.len() != 3 && values.len() != 5 {
+                            return Err("expected 2 or 4 arguments for SET".to_string());
                         }
                         match values[1].clone() {
                             Value::String(key) => {
                                 match values[2].clone() {
                                     Value::String(value) => {
-                                        return Ok(Command::Set(key, value));
+                                        if values.len() == 3 {
+                                            return Ok(Command::Set(key, value));
+                                        } else {
+                                            match values[3].clone() {
+                                                Value::String(arg) if arg.to_uppercase() == "PX" => {
+                                                    match values[4].clone() {
+                                                        Value::String(expiry) => {
+                                                            let ms = expiry.parse::<usize>().map_err(|_| "invalid array length".to_string())?;
+                                                            return Ok(Command::SetExpiry(key, value, ms));
+                                                        }
+                                                        _ => Err("expected PX for arg 3 of SET".to_string()),
+                                                    }
+                                                }
+                                                _ => Err("expected PX for arg 3 of SET".to_string()),
+                                            }
+                                        }
                                     }
-                                    _ => Err("expected string for arg 1 of SET".to_string()),
+                                    _ => Err("expected string for arg 2 of SET".to_string()),
                                 }
                             }
                             _ => Err("expected string for arg 1 of SET".to_string()),
@@ -74,6 +89,7 @@ pub enum Command {
     Ping,
     Echo(String),
     Set(String, String),
+    SetExpiry(String, String, usize),
     Get(String),
 }
 
