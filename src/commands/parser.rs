@@ -1,13 +1,11 @@
 use std::collections::HashMap;
 use std::io;
 use mio::Registry;
-use crate::client::Client;
 
-use crate::commands::get::GetParser;
-use crate::commands::get_del::GetDelParser;
-use crate::commands::set::SetParser;
-use crate::commands::str_len::StrLenParser;
+use crate::client::Client;
+use crate::commands::get_commands;
 use crate::store::Store;
+
 use super::input::Input;
 
 pub struct Parser {
@@ -16,14 +14,8 @@ pub struct Parser {
 
 impl Parser {
     pub fn new() -> Self {
-        let commands: [(&'static str, Box<dyn TryParse>); 4] = [
-            ("GET", Box::new(GetParser::new())),
-            ("GETDEL", Box::new(GetDelParser::new())),
-            ("SET", Box::new(SetParser::new())),
-            ("STRLEN", Box::new(StrLenParser::new())),
-        ];
         Self {
-            parsers: HashMap::from(commands),
+            parsers: HashMap::from(get_commands()),
         }
     }
     
