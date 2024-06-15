@@ -5,23 +5,23 @@
     dead_code
 )]
 
+use std::collections::HashMap;
+use std::io;
+
+use mio::{Events, Interest, Poll, Registry, Token};
+use mio::event::Event;
+use mio::net::TcpListener;
+
+use client::Client;
+use parser::Parser;
+use store::Store;
+
 mod client;
 mod commands;
 mod input;
 mod parser;
 mod resp;
 mod store;
-
-use std::collections::HashMap;
-use std::io;
-
-use mio::event::Event;
-use mio::net::TcpListener;
-use mio::{Events, Interest, Poll, Registry, Token};
-
-use client::Client;
-use parser::Parser;
-use store::Store;
 
 const SERVER: Token = Token(0);
 

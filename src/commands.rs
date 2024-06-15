@@ -1,3 +1,5 @@
+use crate::parser::TryParse;
+
 mod prelude {
     pub use std::io;
 
@@ -5,7 +7,7 @@ mod prelude {
 
     pub use crate::client::Client;
     pub use crate::input::Input;
-    pub use crate::parser::{mutate, Command, Mutators, TryParse};
+    pub use crate::parser::{Command, mutate, Mutators, TryParse};
     pub use crate::store::Store;
 }
 
@@ -20,8 +22,6 @@ mod set;
 mod set_multiple;
 mod set_multiple_if_not_set;
 mod str_len;
-
-use crate::parser::TryParse;
 
 pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 11] {
     [

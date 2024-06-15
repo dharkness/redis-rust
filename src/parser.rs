@@ -1,6 +1,7 @@
-use mio::Registry;
 use std::collections::HashMap;
 use std::io;
+
+use mio::Registry;
 
 use crate::client::Client;
 use crate::commands::get_commands;
