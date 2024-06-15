@@ -7,12 +7,13 @@ use mio::{Interest, Registry, Token};
 use mio::event::Source;
 
 use crate::{interrupted, would_block};
+use crate::resp::{Command, Parser};
 
 pub struct Client {
     token: Token,
     stream: TcpStream,
-    incoming: Vec<u8>,
     outgoing: Vec<u8>,
+    parser: Parser,
 }
 
 impl Client {
@@ -20,8 +21,8 @@ impl Client {
         Self {
             token,
             stream,
-            incoming: Vec::with_capacity(1024),
             outgoing: Vec::with_capacity(4 * 1024),
+            parser: Parser::new(),
         }
     }
 
@@ -54,50 +55,20 @@ impl Client {
                 Err(ref err) if would_block(err) => {
                     println!("read {}", from_utf8(&buf[..bytes_read]).unwrap());
 
-                    self.incoming.extend_from_slice(&buf[..bytes_read]);
+                    self.parser.add(from_utf8(&buf[..bytes_read]).unwrap());
 
                     return Ok(false);
-                },
+                }
                 Err(ref err) if interrupted(err) => {
                     println!("interrupted");
-                },
+                }
                 Err(err) => return Err(err),
             };
         }
     }
 
-    pub fn process_command(&mut self, registry: &Registry) -> io::Result<()> {
-        let mut data = from_utf8(&self.incoming).unwrap().to_string();
-
-        if data == "*2\r\n$7\r\nCOMMAND\r\n$4\r\nDOCS\r\n" {
-            println!("docs");
-
-            self.incoming.truncate(0);
-
-            return self.write(b"*0\r\n", registry);
-            // return self.write(b"%2\r\n+PING\r\n%2\r\n+summary\r\n+Play ping-pong\r\n+group\r\n+connection\r\n+ECHO\r\n%2\r\n+summary\r\n+Hear yourself speak\r\n+group\r\n+connection\r\n", registry);
-        }
-
-        if let Some(index) = data.find("ECHO") {
-            let mut cmd = data.split_off(index + 7);
-            if let Some(index) = cmd.find("\r\n") {
-                let echo = cmd.split_off(index + 2);
-                self.write(b"+", registry)?;
-                self.write(echo.as_bytes(), registry)?;
-            }
-        }
-
-        loop {
-            if let Some(index) = data.find("PING") {
-                self.write(b"+PONG\r\n", registry)?;
-                data = data.split_off(index + 4);
-            } else {
-                break
-            }
-        }
-
-        self.incoming.truncate(0);
-        Ok(())
+    pub fn try_parse_command(&mut self) -> Result<Option<Command>, String> {
+        self.parser.try_parse_command()
     }
 
     pub fn write(&mut self, data: &[u8], registry: &Registry) -> io::Result<()> {
@@ -117,13 +88,13 @@ impl Client {
 
                     self.stream.deregister(registry)?;
                     return Ok(true);
-                },
+                }
                 Ok(n) => {
                     println!("wrote {} bytes", n);
 
                     bytes_sent += n;
                     bytes_left -= n;
-                },
+                }
                 Err(ref err) if would_block(err) => {
                     println!("wrote {}", from_utf8(&self.outgoing[..bytes_sent]).unwrap());
                     if bytes_left > 0 {
@@ -131,10 +102,10 @@ impl Client {
                     }
 
                     return Ok(false);
-                },
+                }
                 Err(ref err) if interrupted(err) => {
                     println!("interrupted");
-                },
+                }
                 Err(err) => return Err(err),
             };
         }
