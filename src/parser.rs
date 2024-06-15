@@ -144,13 +144,11 @@ pub fn mutate<T>(
     input: &mut Input,
     mut target: T,
 ) -> Result<T, String> {
-    let mut iter = mutators.iter();
-
     'outer: while input.has_next() {
         let token = input.next_token().unwrap();
 
         println!("token: {}", token);
-        while let Some((ref tokens, ref op)) = iter.next() {
+        for (ref tokens, ref op) in mutators {
             println!("tokens: {:?}", tokens);
             if tokens.contains(&token.as_str()) {
                 op(&mut target, &token, input)?;
