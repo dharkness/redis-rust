@@ -42,7 +42,7 @@ impl Value {
                             Value::String(key) => match values[2].clone() {
                                 Value::String(value) => {
                                     if values.len() == 3 {
-                                        return Ok(Command::Set(key, value));
+                                        Ok(Command::Set(key, value))
                                     } else {
                                         match values[3].clone() {
                                             Value::String(arg) if arg.to_uppercase() == "PX" => {
@@ -51,9 +51,7 @@ impl Value {
                                                         let ms = expiry.parse::<usize>().map_err(
                                                             |_| "invalid array length".to_string(),
                                                         )?;
-                                                        return Ok(Command::SetExpiry(
-                                                            key, value, ms,
-                                                        ));
+                                                        Ok(Command::SetExpiry(key, value, ms))
                                                     }
                                                     _ => {
                                                         Err("expected PX for arg 3 of SET"
@@ -75,9 +73,7 @@ impl Value {
                             return Err("expected 1 argument for GET".to_string());
                         }
                         match values[1].clone() {
-                            Value::String(key) => {
-                                return Ok(Command::Get(key));
-                            }
+                            Value::String(key) => Ok(Command::Get(key)),
                             _ => Err("expected string for arg 1 of GET".to_string()),
                         }
                     }
@@ -123,9 +119,9 @@ impl Parser {
         let mut index = 0;
         if let Some(value) = self.try_parse_array(&mut index)? {
             self.input = self.input.split_off(index);
-            return Ok(Some(value.command()?));
+            Ok(Some(value.command()?))
         } else {
-            return Ok(None);
+            Ok(None)
         }
     }
 
