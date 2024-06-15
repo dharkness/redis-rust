@@ -12,6 +12,7 @@ mod prelude {
 }
 
 mod append;
+mod command;
 mod copy;
 mod del;
 mod exists;
@@ -23,9 +24,10 @@ mod set_multiple;
 mod set_multiple_if_not_set;
 mod str_len;
 
-pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 11] {
+pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 12] {
     [
         ("APPEND", Box::new(append::AppendParser::new())),
+        ("COMMAND", Box::new(command::CommandParser::new())),
         ("COPY", Box::new(copy::CopyParser::new())),
         ("DEL", Box::new(del::DelParser::new())),
         ("EXISTS", Box::new(exists::ExistsParser::new())),
