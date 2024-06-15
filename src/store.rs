@@ -49,12 +49,16 @@ impl Store {
         }
     }
 
-    pub fn expires(&mut self, key: &String) -> Option<&DateTime<Utc>> {
-        self.expirations.get(key).map(|(_, at)| at)
+    pub fn is_volatile(&self, key: &String) -> bool {
+        self.expirations.get(key).is_some()
     }
 
-    pub fn keep_forever(&mut self, key: &String) {
-        self.expirations.remove(key);
+    pub fn expires(&self, key: &String) -> Option<&DateTime<Utc>> {
+        self.expirations.get_priority(key)
+    }
+
+    pub fn persist(&mut self, key: &String) -> bool {
+        self.expirations.remove(key).is_some()
     }
 
     pub fn expire_at(&mut self, key: &String, at: &DateTime<Utc>) {

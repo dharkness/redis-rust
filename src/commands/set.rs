@@ -42,17 +42,29 @@ impl Apply for Set {
 
         match self.expire {
             Expire::Keep => (),
-            Expire::Never => store.keep_forever(&self.key),
-            Expire::At(at) => store.expire_at(&self.key, &at),
-        }
-
-        if let Some(previous) = store.set(&self.key, &self.value) {
-            if self.get {
-                return client.write_bulk_string(previous.as_str(), registry);
+            Expire::Never => {
+                store.persist(&self.key);
+            }
+            Expire::At(at) => {
+                if at > Utc::now() {
+                    store.expire_at(&self.key, &at);
+                } else {
+                    store.remove(&self.key);
+                    return client.write_ok(registry);
+                }
             }
         }
 
-        client.write_ok(registry)
+        if self.get {
+            if let Some(previous) = store.set(&self.key, &self.value) {
+                client.write_bulk_string(previous.as_str(), registry)
+            } else {
+                client.write_null(registry)
+            }
+        } else {
+            store.set(&self.key, &self.value);
+            client.write_ok(registry)
+        }
     }
 }
 
@@ -122,6 +134,10 @@ enum Expire {
 
 impl Expire {
     pub fn try_parse(token: &str, input: &mut Input) -> Result<Self, String> {
+        if token == "KEEPTTL" {
+            return Ok(Expire::Keep);
+        }
+
         let time = input.next_int()?;
         if time <= 0 {
             return Err("invalid SET time".to_string());
@@ -137,15 +153,14 @@ impl Expire {
                         Duration::new(0, time as u32 * 1_000_000)
                     }
             }
-            "EXAT" => match DateTime::from_timestamp_millis(1_000 * time as i64) {
+            "EXAT" => match DateTime::from_timestamp_millis(time * 1_000) {
                 Some(at) => at,
-                _ => return Err("invalid unix timestamp".to_string()),
+                _ => return Err("invalid SET unix time seconds".to_string()),
             },
-            "PXAT" => match DateTime::from_timestamp_millis(time as i64) {
+            "PXAT" => match DateTime::from_timestamp_millis(time) {
                 Some(at) => at,
-                _ => return Err("invalid unix timestamp".to_string()),
+                _ => return Err("invalid SET unix time milliseconds".to_string()),
             },
-            "KEEPTTL" => return Ok(Expire::Keep),
             _ => return Err("invalid expiration code".to_string()),
         };
 
