@@ -10,14 +10,17 @@ use crate::network::Client;
 use crate::store::Store;
 
 pub struct Parser {
-    parsers: HashMap<&'static str, Box<dyn TryParse>>,
+    commands: CommandTree,
 }
 
 impl Parser {
     pub fn new() -> Self {
-        Self {
-            parsers: HashMap::from(get_commands()),
+        let mut commands = CommandTree::new();
+        for (name, parser) in get_commands() {
+            commands.insert(name, parser);
         }
+
+        Self { commands }
     }
 
     pub fn try_next_input<'a>(
@@ -83,11 +86,11 @@ impl Parser {
     }
 
     pub fn try_parse_command(&self, mut input: Input) -> Result<Box<dyn Apply>, String> {
-        let command = input.next_token()?;
+        let command = input.next()?;
         println!("command: {}", command);
         let parser = self
-            .parsers
-            .get(command.as_str())
+            .commands
+            .get(command)
             .ok_or("unknown command".to_string())?;
 
         parser.try_parse(&mut input)
@@ -137,30 +140,67 @@ pub type Mutators<T> = Vec<(Vec<&'static str>, Mutator<T>)>;
 
 pub fn mutate<T>(
     command: &str,
-    mutators: &Mutators<T>,
+    mutators: &Vec<(Vec<&'static str>, Mutator<T>)>,
     input: &mut Input,
     mut target: T,
 ) -> Result<T, String> {
-    let iter = &mut mutators.iter();
-    let mut extra = None;
+    let mut iter = mutators.iter();
 
     'outer: while input.has_next() {
         let token = input.next_token().unwrap();
 
-        for (tokens, op) in &iter.next() {
+        println!("token: {}", token);
+        while let Some((ref tokens, ref op)) = iter.next() {
+            println!("tokens: {:?}", tokens);
             if tokens.contains(&token.as_str()) {
                 op(&mut target, &token, input)?;
                 continue 'outer;
             }
         }
 
-        extra = Some(token);
-        break;
+        return Err(format!("unexpected {} token {}", command, token));
     }
 
-    if let Some(token) = extra {
-        Err(format!("unexpected {} token {}", command, token))
-    } else {
-        Ok(target)
+    Ok(target)
+}
+
+struct CommandTree {
+    parser: Option<Box<dyn TryParse>>,
+    children: HashMap<char, CommandTree>,
+}
+
+impl CommandTree {
+    fn new() -> Self {
+        Self {
+            parser: None,
+            children: HashMap::new(),
+        }
+    }
+
+    fn insert(&mut self, command: &str, parser: Box<dyn TryParse>) {
+        let mut current = self;
+
+        for c in command.chars() {
+            current = current
+                .children
+                .entry(c.to_ascii_uppercase())
+                .or_insert(CommandTree::new());
+        }
+
+        current.parser = Some(parser);
+    }
+
+    fn get(&self, command: &str) -> Option<&Box<dyn TryParse>> {
+        let mut current = self;
+
+        for c in command.chars() {
+            if let Some(next) = current.children.get(&(c.to_ascii_uppercase())) {
+                current = next;
+            } else {
+                return None;
+            }
+        }
+
+        current.parser.as_ref()
     }
 }
