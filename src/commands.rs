@@ -111,7 +111,7 @@ impl CommandTree {
         current.parser = Some(parser);
     }
 
-    pub fn get(&self, command: &str) -> Option<&Box<dyn TryParse>> {
+    pub fn get(&self, command: &str) -> Option<&dyn TryParse> {
         let mut current = self;
 
         for c in command.chars() {
@@ -122,6 +122,6 @@ impl CommandTree {
             }
         }
 
-        current.parser.as_ref()
+        current.parser.as_deref()
     }
 }
