@@ -1,15 +1,14 @@
 use std::collections::HashMap;
 use std::io;
 use std::str::from_utf8;
-use std::time::Duration;
 
-use chrono::{DateTime, Utc};
 use mio::Registry;
 
 use crate::commands::get_commands;
-use crate::input::Input;
 use crate::network::Client;
 use crate::store::Store;
+
+use super::Input;
 
 pub struct Parser {
     commands: CommandTree,
@@ -135,83 +134,6 @@ pub trait Apply {
 
 pub trait TryParse {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String>;
-}
-
-pub type ParseOption<T> = fn(&mut T, &String, &mut Input) -> Result<(), String>;
-pub type Options<T> = Vec<(Vec<&'static str>, ParseOption<T>)>;
-
-pub fn parse_options<T>(
-    command: &str,
-    options: &Vec<(Vec<&'static str>, ParseOption<T>)>,
-    input: &mut Input,
-    mut target: T,
-) -> Result<T, String> {
-    let mut used_ops = Vec::new();
-
-    'outer: while input.has_next() {
-        let token = input.next_token().unwrap();
-
-        println!("token: {}", token);
-        for (ref tokens, ref op) in options {
-            println!("tokens: {:?}", tokens);
-            if tokens.contains(&token.as_str()) {
-                if used_ops.contains(&op) {
-                    return Err(format!("duplicate {} option {}", command, token));
-                }
-
-                used_ops.push(op);
-                op(&mut target, &token, input)?;
-                continue 'outer;
-            }
-        }
-
-        return Err(format!("unexpected {} token {}", command, token));
-    }
-
-    Ok(target)
-}
-
-pub enum Expiration {
-    At(DateTime<Utc>),
-    Keep,
-    Never,
-}
-
-impl Expiration {
-    pub fn try_parse(token: &str, input: &mut Input) -> Result<Self, String> {
-        if token == "KEEPTTL" {
-            return Ok(Expiration::Keep);
-        }
-
-        let time = input.next_int()?;
-        if time <= 0 {
-            return Err("invalid SET time".to_string());
-        }
-
-        let at = match token {
-            "EX" => Utc::now() + Duration::new(time as u64, 0),
-            "PX" => {
-                Utc::now()
-                    + if time >= 1_000 {
-                        Duration::new(time as u64 / 1_000, (time % 1_000) as u32 * 1_000_000)
-                    } else {
-                        Duration::new(0, time as u32 * 1_000_000)
-                    }
-            }
-            "EXAT" => match DateTime::from_timestamp_millis(time * 1_000) {
-                Some(at) => at,
-                _ => return Err("invalid SET unix time seconds".to_string()),
-            },
-            "PXAT" => match DateTime::from_timestamp_millis(time) {
-                Some(at) => at,
-                _ => return Err("invalid SET unix time milliseconds".to_string()),
-            },
-            _ => return Err("invalid expiration code".to_string()),
-        };
-
-        println!("expires at {}", at.format("%Y-%m-%d %H:%M:%S"));
-        Ok(Expiration::At(at))
-    }
 }
 
 struct CommandTree {

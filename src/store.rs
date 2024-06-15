@@ -6,7 +6,7 @@ use chrono::prelude::*;
 use itertools::Itertools;
 use priority_queue::PriorityQueue;
 
-use crate::pattern::Pattern;
+use crate::parse::Pattern;
 
 pub struct Store {
     values: HashMap<String, String>,

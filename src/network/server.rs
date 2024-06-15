@@ -6,7 +6,7 @@ use mio::{Events, Interest, Poll, Token};
 use mio::event::Event;
 use mio::net::TcpListener;
 
-use crate::parser::Parser;
+use crate::parse::Parser;
 use crate::store::Store;
 
 use super::{Client, interrupted};

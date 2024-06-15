@@ -1,13 +1,12 @@
-use crate::parser::TryParse;
+use crate::parse::TryParse;
 
 mod prelude {
     pub use std::io;
 
     pub use mio::Registry;
 
-    pub use crate::input::Input;
     pub use crate::network::Client;
-    pub use crate::parser::{Apply, Expiration, Options, parse_options, TryParse};
+    pub use crate::parse::{Apply, Expiration, Input, Options, parse_options, Pattern, TryParse};
     pub use crate::store::Store;
 }
 

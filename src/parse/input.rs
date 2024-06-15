@@ -1,4 +1,4 @@
-use crate::parser::parse_integer;
+use super::parser::parse_integer;
 
 pub struct Input<'a> {
     tokens: Vec<&'a str>,

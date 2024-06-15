@@ -1,5 +1,3 @@
-use crate::pattern::Pattern;
-
 use super::prelude::*;
 
 struct Keys {

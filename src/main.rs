@@ -10,10 +10,8 @@ use std::io;
 use crate::network::Server;
 
 mod commands;
-mod input;
 mod network;
-mod parser;
-mod pattern;
+mod parse;
 mod resp;
 mod store;
 

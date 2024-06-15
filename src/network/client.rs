@@ -6,7 +6,7 @@ use mio::{Interest, Registry, Token};
 use mio::event::Source;
 use mio::net::TcpStream;
 
-use crate::parser::Parser;
+use crate::parse::Parser;
 use crate::store::Store;
 
 use super::{interrupted, would_block};
