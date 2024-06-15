@@ -22,13 +22,14 @@ mod expire_time;
 mod get;
 mod get_del;
 mod get_range;
+mod p_expire_at;
 mod p_expire_time;
 mod set;
 mod set_multiple;
 mod set_multiple_if_not_set;
 mod str_len;
 
-pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 16] {
+pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 17] {
     [
         ("APPEND", Box::new(append::AppendParser::new())),
         ("COMMAND", Box::new(command::CommandParser::new())),
@@ -46,6 +47,7 @@ pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 16] {
             "MSETNX",
             Box::new(set_multiple_if_not_set::SetMultipleIfNotSetParser::new()),
         ),
+        ("PEXPIREAT", Box::new(p_expire_at::PExpireAtParser::new())),
         (
             "PEXPIRETIME",
             Box::new(p_expire_time::PExpireTimeParser::new()),
