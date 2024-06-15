@@ -12,11 +12,12 @@ mod get_del;
 mod get_range;
 mod set;
 mod set_multiple;
+mod set_multiple_if_not_set;
 mod str_len;
 
 pub use parser::{Parser, TryParse};
 
-pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 10] {
+pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 11] {
     [
         ("APPEND", Box::new(append::AppendParser::new())),
         ("COPY", Box::new(copy::CopyParser::new())),
@@ -26,6 +27,7 @@ pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 10] {
         ("GETDEL", Box::new(get_del::GetDelParser::new())),
         ("GETRANGE", Box::new(get_range::GetRangeParser::new())),
         ("MSET", Box::new(set_multiple::SetMultipleParser::new())),
+        ("MSETNX", Box::new(set_multiple_if_not_set::SetMultipleIfNotSetParser::new())),
         ("SET", Box::new(set::SetParser::new())),
         ("STRLEN", Box::new(str_len::StrLenParser::new())),
     ]
