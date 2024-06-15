@@ -1,6 +1,4 @@
 use std::collections::HashMap;
-use std::ops::Add;
-use std::time::Duration;
 
 use chrono::prelude::*;
 use itertools::Itertools;
@@ -99,60 +97,5 @@ impl Store {
                 break;
             }
         }
-    }
-}
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-struct Expiration {
-    key: String,
-    at: DateTime<Utc>,
-}
-
-impl Expiration {
-    pub fn new_at(key: String, at: DateTime<Utc>) -> Self {
-        Self { key, at }
-    }
-
-    fn new(key: String, ms: usize) -> Self {
-        let duration = if ms >= 1000 {
-            let secs = ms / 1000;
-            Duration::new(secs as u64, (ms - secs * 1000) as u32 * 1000000)
-        } else {
-            Duration::new(0, ms as u32 * 1000000)
-        };
-        let at = Utc::now().add(duration);
-        println!("will expire {} at {}", key, at.format("%Y-%m-%d %H:%M:%S"));
-        Self { key, at }
-    }
-
-    fn expired(&self) -> bool {
-        let now = Utc::now();
-        if now >= self.at {
-            println!(
-                "expired key {} at {}",
-                self.key,
-                now.format("%Y-%m-%d %H:%M:%S")
-            );
-            true
-        } else {
-            false
-        }
-    }
-
-    fn key(&self) -> &str {
-        &self.key
-    }
-}
-
-impl Ord for Expiration {
-    /// Expirations are ordered by their expiry time, with the earliest expiry time first.
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        other.at.cmp(&self.at)
-    }
-}
-
-impl PartialOrd for Expiration {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
     }
 }
