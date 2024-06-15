@@ -64,7 +64,8 @@ impl Store {
 
     pub fn copy(&mut self, source: &str, destination: &str) -> bool {
         if let Some(value) = self.get(source) {
-            self.set(&destination, &value.to_string());
+            self.values
+                .insert(destination.to_string(), value.to_string());
             true
         } else {
             false
@@ -84,7 +85,7 @@ impl Store {
     }
 
     pub fn expire_at(&mut self, key: &str, at: &DateTime<Utc>) {
-        self.expirations.push(key.to_string(), at.clone());
+        self.expirations.push(key.to_string(), *at);
     }
 
     pub fn expire_items(&mut self) {
@@ -120,11 +121,7 @@ impl Expiration {
             Duration::new(0, ms as u32 * 1000000)
         };
         let at = Utc::now().add(duration);
-        println!(
-            "will expire {} at {}",
-            key,
-            at.format("%Y-%m-%d %H:%M:%S").to_string()
-        );
+        println!("will expire {} at {}", key, at.format("%Y-%m-%d %H:%M:%S"));
         Self { key, at }
     }
 
@@ -134,7 +131,7 @@ impl Expiration {
             println!(
                 "expired key {} at {}",
                 self.key,
-                now.format("%Y-%m-%d %H:%M:%S").to_string()
+                now.format("%Y-%m-%d %H:%M:%S")
             );
             true
         } else {
