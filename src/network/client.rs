@@ -14,6 +14,7 @@ use super::{interrupted, would_block};
 pub struct Client {
     token: Token,
     stream: TcpStream,
+    incoming_end: usize,
     incoming: Vec<u8>,
     outgoing: Vec<u8>,
 }
@@ -23,7 +24,8 @@ impl Client {
         Self {
             token,
             stream,
-            incoming: Vec::with_capacity(1024),
+            incoming: vec![0; 1024],
+            incoming_end: 0,
             outgoing: Vec::with_capacity(4 * 1024),
         }
     }
@@ -34,12 +36,12 @@ impl Client {
     }
 
     pub fn receive(&mut self, registry: &Registry) -> io::Result<bool> {
-        let mut buf = vec![0; 1024];
-        let mut bytes_read = 0;
-
         loop {
-            println!("reading up to {} bytes", buf.len() - bytes_read);
-            match self.stream.read(&mut buf[bytes_read..]) {
+            println!(
+                "reading up to {} bytes",
+                self.incoming.len() - self.incoming_end
+            );
+            match self.stream.read(&mut self.incoming[self.incoming_end..]) {
                 Ok(0) => {
                     println!("connection closed");
 
@@ -50,15 +52,16 @@ impl Client {
                 Ok(n) => {
                     println!("read {} bytes", n);
 
-                    bytes_read += n;
-                    if bytes_read == buf.len() {
-                        buf.resize(buf.len() + 1024, 0);
+                    self.incoming_end += n;
+                    if self.incoming_end == self.incoming.len() {
+                        self.incoming.resize(self.incoming.len() + 1024, 0);
                     }
                 }
                 Err(ref err) if would_block(err) => {
-                    println!("read {}", from_utf8(&buf[..bytes_read]).unwrap());
-
-                    self.incoming.extend_from_slice(&buf[..bytes_read]);
+                    println!(
+                        "read {}",
+                        from_utf8(&self.incoming[..self.incoming_end]).unwrap()
+                    );
 
                     return Ok(false);
                 }
@@ -78,8 +81,8 @@ impl Client {
     ) -> io::Result<()> {
         let mut index = 0;
 
-        loop {
-            match parser.try_next_input(&self.incoming[index..]) {
+        while index < self.incoming_end {
+            match parser.try_next_input(&self.incoming[index..self.incoming_end]) {
                 Ok(Some((input, len))) => {
                     index += len;
                     match parser.try_parse_command(input) {
@@ -102,7 +105,9 @@ impl Client {
             }
         }
 
-        self.incoming = self.incoming.split_off(index);
+        self.incoming.copy_within(index..self.incoming_end, 0);
+        self.incoming_end -= index;
+
         Ok(())
     }
 
@@ -151,14 +156,12 @@ impl Client {
 
     pub fn send(&mut self, registry: &Registry) -> io::Result<bool> {
         let mut bytes_sent = 0;
-        let mut bytes_left = self.outgoing.len();
+        let bytes_total = self.outgoing.len();
+        let mut bytes_left = bytes_total;
 
         while bytes_left > 0 {
             println!("writing up to {} bytes", bytes_left);
-            match self
-                .stream
-                .write(&self.outgoing[bytes_sent..self.outgoing.len()])
-            {
+            match self.stream.write(&self.outgoing[bytes_sent..bytes_total]) {
                 Ok(0) => {
                     println!("connection closed");
 
@@ -175,6 +178,8 @@ impl Client {
                     println!("wrote {}", from_utf8(&self.outgoing[..bytes_sent]).unwrap());
                     if bytes_left > 0 {
                         println!("did not write {} bytes", bytes_left);
+                        self.outgoing.copy_within(bytes_sent..bytes_total, 0);
+                        self.outgoing.truncate(bytes_left);
                     }
 
                     return Ok(false);
