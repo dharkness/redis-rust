@@ -131,6 +131,10 @@ impl Client {
         self.write(format!("${}\r\n{}\r\n", value.len(), value).as_bytes(), registry)
     }
 
+    pub fn write_integer(&mut self, value: u64, registry: &Registry) -> io::Result<()> {
+        self.write(format!(":{}\r\n", value).as_bytes(), registry)
+    }
+
     pub fn send(&mut self, registry: &Registry) -> io::Result<bool> {
         let mut bytes_sent = 0;
         let mut bytes_left = self.outgoing.len();
