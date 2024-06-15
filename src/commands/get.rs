@@ -7,7 +7,7 @@ use super::input::Input;
 use super::parser::{Command, TryParse};
 
 struct Get {
-    pub key: String,
+    key: String,
 }
 
 impl Get {

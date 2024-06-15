@@ -8,8 +8,8 @@ use super::input::Input;
 use super::parser::{Command, TryParse};
 
 struct Append {
-    pub key: String,
-    pub value: String,
+    key: String,
+    value: String,
 }
 
 impl Append {

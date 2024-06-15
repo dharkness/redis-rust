@@ -9,11 +9,11 @@ use super::parser::{Command, mutate, Mutators, TryParse};
 use super::when::When;
 
 struct Set {
-    pub key: String,
-    pub value: String,
-    pub when: When,
-    pub get: bool,
-    pub expire: Expire,
+    key: String,
+    value: String,
+    when: When,
+    get: bool,
+    expire: Expire,
 }
 
 impl Set {
