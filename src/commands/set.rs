@@ -24,7 +24,7 @@ impl Set {
     }
 }
 
-impl Command for Set {
+impl Apply for Set {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         match self.when {
             When::Exists => {
@@ -99,7 +99,7 @@ impl SetParser {
 }
 
 impl TryParse for SetParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Command>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
         let key = input.next()?;
         let value = input.next()?;
 

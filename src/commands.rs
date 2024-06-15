@@ -7,7 +7,7 @@ mod prelude {
 
     pub use crate::input::Input;
     pub use crate::network::Client;
-    pub use crate::parser::{Command, mutate, Mutators, TryParse};
+    pub use crate::parser::{Apply, mutate, Mutators, TryParse};
     pub use crate::store::Store;
 }
 

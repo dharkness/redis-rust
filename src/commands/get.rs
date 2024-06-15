@@ -10,7 +10,7 @@ impl Get {
     }
 }
 
-impl Command for Get {
+impl Apply for Get {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         if let Some(value) = store.get(&self.key) {
             client.write_bulk_string(value, registry)
@@ -29,7 +29,7 @@ impl GetParser {
 }
 
 impl TryParse for GetParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Command>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
         Ok(Box::new(Get::new(input.next()?)))
     }
 }

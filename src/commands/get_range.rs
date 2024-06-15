@@ -12,7 +12,7 @@ impl GetRange {
     }
 }
 
-impl Command for GetRange {
+impl Apply for GetRange {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         let substring = if let Some(value) = store.get(&self.key) {
             let len = value.len() as i64;
@@ -60,7 +60,7 @@ impl GetRangeParser {
 }
 
 impl TryParse for GetRangeParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Command>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
         let key = input.next()?;
         let start = input
             .next()?

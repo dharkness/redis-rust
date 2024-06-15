@@ -13,7 +13,7 @@ impl Append {
     }
 }
 
-impl Command for Append {
+impl Apply for Append {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         let new_value = if let Some(current) = store.get(&self.key) {
             current.clone().add(&self.value)
@@ -34,7 +34,7 @@ impl AppendParser {
 }
 
 impl TryParse for AppendParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Command>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
         Ok(Box::new(Append::new(input.next()?, input.next()?)))
     }
 }

@@ -16,7 +16,7 @@ impl Copy {
     }
 }
 
-impl Command for Copy {
+impl Apply for Copy {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         if (self.replace || !store.contains_key(&self.destination))
             && store.copy(&self.source, &self.destination)
@@ -46,7 +46,7 @@ impl CopyParser {
 }
 
 impl TryParse for CopyParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Command>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
         let source = input.next()?;
         let destination = input.next()?;
 

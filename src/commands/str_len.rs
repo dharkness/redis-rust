@@ -10,7 +10,7 @@ impl StrLen {
     }
 }
 
-impl Command for StrLen {
+impl Apply for StrLen {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         if let Some(value) = store.get(&self.key) {
             client.write_integer(value.len() as i64, registry)
@@ -29,7 +29,7 @@ impl StrLenParser {
 }
 
 impl TryParse for StrLenParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Command>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
         Ok(Box::new(StrLen::new(input.next()?)))
     }
 }

@@ -10,7 +10,7 @@ impl GetDel {
     }
 }
 
-impl Command for GetDel {
+impl Apply for GetDel {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         if let Some(value) = store.get_and_remove(&self.key) {
             client.write_bulk_string(&value, registry)
@@ -29,7 +29,7 @@ impl GetDelParser {
 }
 
 impl TryParse for GetDelParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Command>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
         Ok(Box::new(GetDel::new(input.next()?)))
     }
 }

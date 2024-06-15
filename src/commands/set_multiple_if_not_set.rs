@@ -10,7 +10,7 @@ impl SetMultipleIfNotSet {
     }
 }
 
-impl Command for SetMultipleIfNotSet {
+impl Apply for SetMultipleIfNotSet {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         if self.key_value_pairs.len() % 2 != 0 {
             client.write_simple_error("wrong number of MSET arguments", registry)
@@ -37,7 +37,7 @@ impl SetMultipleIfNotSetParser {
 }
 
 impl TryParse for SetMultipleIfNotSetParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Command>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
         Ok(Box::new(SetMultipleIfNotSet::new(input.rest()?)))
     }
 }

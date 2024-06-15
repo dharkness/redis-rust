@@ -79,7 +79,7 @@ impl Parser {
         }
     }
 
-    pub fn try_parse_command(&self, mut input: Input) -> Result<Box<dyn Command>, String> {
+    pub fn try_parse_command(&self, mut input: Input) -> Result<Box<dyn Apply>, String> {
         let command = input.next_token()?;
         println!("command: {}", command);
         let parser = self
@@ -121,12 +121,12 @@ fn parse_integer(byte_slice: &[u8]) -> Result<i64, String> {
     Ok(if negative { -result } else { result })
 }
 
-pub trait Command {
+pub trait Apply {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()>;
 }
 
 pub trait TryParse {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Command>, String>;
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String>;
 }
 
 pub type Mutator<T> = fn(&mut T, &String, &mut Input) -> Result<(), String>;

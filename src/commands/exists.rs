@@ -10,7 +10,7 @@ impl Exists {
     }
 }
 
-impl Command for Exists {
+impl Apply for Exists {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         client.write_integer(
             self.keys
@@ -31,7 +31,7 @@ impl ExistsParser {
 }
 
 impl TryParse for ExistsParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Command>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
         Ok(Box::new(Exists::new(input.rest()?)))
     }
 }
