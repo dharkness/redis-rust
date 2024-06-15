@@ -5,8 +5,8 @@ mod prelude {
 
     pub use mio::Registry;
 
-    pub use crate::client::Client;
     pub use crate::input::Input;
+    pub use crate::network::Client;
     pub use crate::parser::{Command, mutate, Mutators, TryParse};
     pub use crate::store::Store;
 }

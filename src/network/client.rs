@@ -2,13 +2,14 @@ use std::io;
 use std::io::{Read, Write};
 use std::str::from_utf8;
 
+use mio::{Interest, Registry, Token};
 use mio::event::Source;
 use mio::net::TcpStream;
-use mio::{Interest, Registry, Token};
 
 use crate::parser::Parser;
 use crate::store::Store;
-use crate::{interrupted, would_block};
+
+use super::{interrupted, would_block};
 
 pub struct Client {
     token: Token,

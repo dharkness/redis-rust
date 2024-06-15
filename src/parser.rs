@@ -3,9 +3,9 @@ use std::io;
 
 use mio::Registry;
 
-use crate::client::Client;
 use crate::commands::get_commands;
 use crate::input::Input;
+use crate::network::Client;
 use crate::store::Store;
 
 pub struct Parser {
