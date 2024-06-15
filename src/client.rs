@@ -115,19 +115,19 @@ impl Client {
         self.write(b"+OK\r\n", registry)
     }
 
-    pub fn write_simple_error(&mut self, error: &String, registry: &Registry) -> io::Result<()> {
+    pub fn write_simple_error(&mut self, error: &str, registry: &Registry) -> io::Result<()> {
         self.write(format!("-{}\r\n", error).as_bytes(), registry)
     }
 
-    pub fn write_bulk_error(&mut self, error: &String, registry: &Registry) -> io::Result<()> {
+    pub fn write_bulk_error(&mut self, error: &str, registry: &Registry) -> io::Result<()> {
         self.write(format!("!{}\r\n{}\r\n", error.len(), error).as_bytes(), registry)
     }
 
-    pub fn write_simple_string(&mut self, value: &String, registry: &Registry) -> io::Result<()> {
+    pub fn write_simple_string(&mut self, value: &str, registry: &Registry) -> io::Result<()> {
         self.write(format!("+{}\r\n", value).as_bytes(), registry)
     }
 
-    pub fn write_bulk_string(&mut self, value: &String, registry: &Registry) -> io::Result<()> {
+    pub fn write_bulk_string(&mut self, value: &str, registry: &Registry) -> io::Result<()> {
         self.write(format!("${}\r\n{}\r\n", value.len(), value).as_bytes(), registry)
     }
 
