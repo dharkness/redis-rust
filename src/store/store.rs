@@ -21,13 +21,13 @@ impl Store {
         }
     }
 
-    pub fn set(&mut self, key: &String, value: &String) -> Option<String> {
-        self.values.insert(key.clone(), value.clone())
+    pub fn set(&mut self, key: &str, value: &str) -> Option<String> {
+        self.values.insert(key.to_string(), value.to_string())
     }
 
-    pub fn rename(&mut self, key: &String, new_key: &String) -> bool {
+    pub fn rename(&mut self, key: &str, new_key: &str) -> bool {
         if let Some(value) = self.values.remove(key) {
-            self.values.insert(new_key.clone(), value);
+            self.values.insert(new_key.to_string(), value);
             self.expirations.remove(key);
             self.expirations.remove(new_key);
             true
@@ -36,54 +36,55 @@ impl Store {
         }
     }
 
-    pub fn remove(&mut self, key: &String) -> bool {
+    pub fn remove(&mut self, key: &str) -> bool {
         self.expirations.remove(key);
         self.values.remove(key).is_some()
     }
 
-    pub fn contains_key(&self, key: &String) -> bool {
+    pub fn contains_key(&self, key: &str) -> bool {
         self.values.contains_key(key)
     }
 
-    pub fn keys(&self, pattern: &Pattern) -> Vec<&String> {
+    pub fn keys(&self, pattern: &Pattern) -> Vec<&str> {
         self.values
             .keys()
             .filter(|key| pattern.matches(key))
+            .map(|key| key.as_str())
             .collect_vec()
     }
 
-    pub fn get(&self, key: &String) -> Option<&String> {
-        self.values.get(key)
+    pub fn get(&self, key: &str) -> Option<&str> {
+        self.values.get(key).map(|value| value.as_str())
     }
 
-    pub fn get_and_remove(&mut self, key: &String) -> Option<String> {
+    pub fn get_and_remove(&mut self, key: &str) -> Option<String> {
         self.expirations.remove(key);
         self.values.remove(key)
     }
 
-    pub fn copy(&mut self, source: &String, destination: &String) -> bool {
+    pub fn copy(&mut self, source: &str, destination: &str) -> bool {
         if let Some(value) = self.get(source) {
-            self.set(&destination, &value.clone());
+            self.set(&destination, &value.to_string());
             true
         } else {
             false
         }
     }
 
-    pub fn is_volatile(&self, key: &String) -> bool {
+    pub fn is_volatile(&self, key: &str) -> bool {
         self.expirations.get(key).is_some()
     }
 
-    pub fn expires(&self, key: &String) -> Option<&DateTime<Utc>> {
+    pub fn expires(&self, key: &str) -> Option<&DateTime<Utc>> {
         self.expirations.get_priority(key)
     }
 
-    pub fn persist(&mut self, key: &String) -> bool {
+    pub fn persist(&mut self, key: &str) -> bool {
         self.expirations.remove(key).is_some()
     }
 
-    pub fn expire_at(&mut self, key: &String, at: &DateTime<Utc>) {
-        self.expirations.push(key.clone(), at.clone());
+    pub fn expire_at(&mut self, key: &str, at: &DateTime<Utc>) {
+        self.expirations.push(key.to_string(), at.clone());
     }
 
     pub fn expire_items(&mut self) {

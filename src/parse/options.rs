@@ -1,6 +1,6 @@
 use super::Input;
 
-pub type ParseOption<T> = fn(&mut T, &String, &mut Input) -> Result<(), String>;
+pub type ParseOption<T> = fn(&mut T, &str, &mut Input) -> Result<(), String>;
 pub type Options<T> = Vec<(Vec<&'static str>, ParseOption<T>)>;
 
 pub fn parse_options<T>(

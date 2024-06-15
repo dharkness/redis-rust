@@ -84,8 +84,8 @@ impl SetParser {
         }
     }
 
-    fn try_when(set: &mut Set, token: &String, _: &mut Input) -> Result<(), String> {
-        set.when = match token.as_str() {
+    fn try_when(set: &mut Set, token: &str, _: &mut Input) -> Result<(), String> {
+        set.when = match token {
             "NX" => When::NotExists,
             "XX" => When::Exists,
             _ => panic!("unexpected token"),
@@ -93,12 +93,12 @@ impl SetParser {
         Ok(())
     }
 
-    fn try_get(set: &mut Set, _: &String, _: &mut Input) -> Result<(), String> {
+    fn try_get(set: &mut Set, _: &str, _: &mut Input) -> Result<(), String> {
         set.get = true;
         Ok(())
     }
 
-    fn try_expire(set: &mut Set, token: &String, input: &mut Input) -> Result<(), String> {
+    fn try_expire(set: &mut Set, token: &str, input: &mut Input) -> Result<(), String> {
         set.expire = Expiration::try_parse(token, input)?;
         Ok(())
     }

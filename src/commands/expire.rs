@@ -55,8 +55,8 @@ impl ExpireParser {
         }
     }
 
-    pub fn try_expiry(expire: &mut Expire, token: &String, _: &mut Input) -> Result<(), String> {
-        expire.expiry = match token.as_str() {
+    pub fn try_expiry(expire: &mut Expire, token: &str, _: &mut Input) -> Result<(), String> {
+        expire.expiry = match token {
             "NX" => Expiry::None,
             "XX" => Expiry::Has,
             "LT" => Expiry::LessThan,

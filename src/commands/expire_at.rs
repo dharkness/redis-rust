@@ -14,7 +14,7 @@ impl ExpireAtParser {
         }
     }
 
-    fn try_expiry(expire: &mut Expire, token: &String, input: &mut Input) -> Result<(), String> {
+    fn try_expiry(expire: &mut Expire, token: &str, input: &mut Input) -> Result<(), String> {
         ExpireParser::try_expiry(expire, token, input)
     }
 }

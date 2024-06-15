@@ -16,7 +16,7 @@ impl Append {
 impl Apply for Append {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         let new_value = if let Some(current) = store.get(&self.key) {
-            current.clone().add(&self.value)
+            current.to_string().add(&self.value)
         } else {
             self.value.clone()
         };

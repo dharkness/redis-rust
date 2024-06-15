@@ -39,7 +39,7 @@ impl CopyParser {
         }
     }
 
-    fn try_replace(copy: &mut Copy, _: &String, _: &mut Input) -> Result<(), String> {
+    fn try_replace(copy: &mut Copy, _: &str, _: &mut Input) -> Result<(), String> {
         copy.replace = true;
         Ok(())
     }

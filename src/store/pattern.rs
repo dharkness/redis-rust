@@ -13,7 +13,7 @@ impl Pattern {
         })
     }
 
-    pub fn matches(&self, key: &String) -> bool {
+    pub fn matches(&self, key: &str) -> bool {
         self.pattern.is_match(key)
     }
 }

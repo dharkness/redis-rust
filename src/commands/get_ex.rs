@@ -56,7 +56,7 @@ impl GetExParser {
         }
     }
 
-    fn try_expire(get_ex: &mut GetEx, token: &String, input: &mut Input) -> Result<(), String> {
+    fn try_expire(get_ex: &mut GetEx, token: &str, input: &mut Input) -> Result<(), String> {
         get_ex.expire = Expiration::try_parse(token, input)?;
         Ok(())
     }
