@@ -16,6 +16,7 @@ mod command;
 mod copy;
 mod del;
 mod exists;
+mod expire;
 mod get;
 mod get_del;
 mod get_range;
@@ -24,13 +25,14 @@ mod set_multiple;
 mod set_multiple_if_not_set;
 mod str_len;
 
-pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 12] {
+pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 13] {
     [
         ("APPEND", Box::new(append::AppendParser::new())),
         ("COMMAND", Box::new(command::CommandParser::new())),
         ("COPY", Box::new(copy::CopyParser::new())),
         ("DEL", Box::new(del::DelParser::new())),
         ("EXISTS", Box::new(exists::ExistsParser::new())),
+        ("EXPIRE", Box::new(expire::ExpireParser::new())),
         ("GET", Box::new(get::GetParser::new())),
         ("GETDEL", Box::new(get_del::GetDelParser::new())),
         ("GETRANGE", Box::new(get_range::GetRangeParser::new())),
