@@ -22,6 +22,17 @@ impl Store {
         self.values.insert(key.clone(), value.clone())
     }
 
+    pub fn rename(&mut self, key: &String, new_key: &String) -> bool {
+        if let Some(value) = self.values.remove(key) {
+            self.values.insert(new_key.clone(), value);
+            self.expirations.remove(key);
+            self.expirations.remove(new_key);
+            true
+        } else {
+            false
+        }
+    }
+
     pub fn remove(&mut self, key: &String) -> bool {
         self.expirations.remove(key);
         self.values.remove(key).is_some()

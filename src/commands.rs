@@ -26,12 +26,13 @@ mod p_expire;
 mod p_expire_at;
 mod p_expire_time;
 mod persist;
+mod rename;
 mod set;
 mod set_multiple;
 mod set_multiple_if_not_set;
 mod str_len;
 
-pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 19] {
+pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 20] {
     [
         ("APPEND", Box::new(append::AppendParser::new())),
         ("COMMAND", Box::new(command::CommandParser::new())),
@@ -56,6 +57,7 @@ pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 19] {
             "PEXPIRETIME",
             Box::new(p_expire_time::PExpireTimeParser::new()),
         ),
+        ("RENAME", Box::new(rename::RenameParser::new())),
         ("SET", Box::new(set::SetParser::new())),
         ("STRLEN", Box::new(str_len::StrLenParser::new())),
     ]
