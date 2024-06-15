@@ -40,6 +40,15 @@ impl Store {
         self.values.remove(key)
     }
 
+    pub fn copy(&mut self, source: &String, destination: &String) -> bool {
+        if let Some(value) = self.get(source) {
+            self.set(&destination, &value.clone());
+            true
+        } else {
+            false
+        }
+    }
+
     pub fn keep_forever(&mut self, key: &String) {
         self.expirations.remove(key);
     }
