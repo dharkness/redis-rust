@@ -30,4 +30,8 @@ impl Input {
     pub fn next_int(&mut self) -> Result<u64, String> {
         self.next()?.parse::<u64>().map_err(|e| e.to_string())
     }
+
+    pub fn rest(&mut self) -> Result<Vec<String>, String> {
+        Ok(self.tokens.split_off(0))
+    }
 }
