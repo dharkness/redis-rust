@@ -22,8 +22,9 @@ impl Store {
         self.values.insert(key.clone(), value.clone());
     }
 
-    pub fn remove(&mut self, key: &String) {
-        self.values.remove(key);
+    pub fn remove(&mut self, key: &String) -> bool {
+        self.expirations.remove(key);
+        self.values.remove(key).is_some()
     }
 
     pub fn contains_key(&self, key: &String) -> bool {
@@ -35,6 +36,7 @@ impl Store {
     }
 
     pub fn get_and_remove(&mut self, key: &String) -> Option<String> {
+        self.expirations.remove(key);
         self.values.remove(key)
     }
 

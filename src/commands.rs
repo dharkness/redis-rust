@@ -4,6 +4,7 @@ mod parser;
 mod when;
 
 mod append;
+mod del;
 mod exists;
 mod get;
 mod get_del;
@@ -13,9 +14,10 @@ mod str_len;
 
 pub use parser::{Parser, TryParse};
 
-pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 7] {
+pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 8] {
     [
         ("APPEND", Box::new(append::AppendParser::new())),
+        ("DEL", Box::new(del::DelParser::new())),
         ("EXISTS", Box::new(exists::ExistsParser::new())),
         ("GET", Box::new(get::GetParser::new())),
         ("GETDEL", Box::new(get_del::GetDelParser::new())),
