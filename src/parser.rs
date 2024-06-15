@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::io;
+use std::str::from_utf8;
 
 use mio::Registry;
 
@@ -19,60 +20,60 @@ impl Parser {
         }
     }
 
-    pub fn try_next_input(
-        &self,
-        buffer: &String,
-        start: &mut usize,
-    ) -> Result<Option<Input>, String> {
+    pub fn try_next_input(&self, buffer: &[u8]) -> Result<Option<(Input, usize)>, String> {
         if buffer.is_empty() {
             return Ok(None);
         }
-        if buffer.as_bytes()[*start] != b'*' {
+        if buffer[0] != b'*' {
             return Err("expected '*'".to_string());
         }
 
-        let mut index = *start;
-        if let Some(end) = buffer[index..].find("\r\n") {
-            // println!("end: {}", end);
-            let part = &buffer[index + 1..index + end];
-            // println!("line: {}", line);
-            let len = part
-                .parse::<usize>()
-                .map_err(|_| "invalid array length".to_string())?;
-            let mut tokens = Vec::with_capacity(len);
-            index += end + 2;
+        if let Some(end) = find_cr_lf(buffer) {
+            let len = parse_integer(&buffer[1..end])?;
+            if len < 1 {
+                return Err("invalid command length".to_string());
+            }
+
+            let mut tokens = Vec::with_capacity(len as usize);
+            let mut index = end + 2;
+
             for _ in 0..len {
-                if let Some(value) = self.try_next_token(buffer, &mut index)? {
-                    tokens.push(value);
+                if let Some((token, end)) = self.try_next_token(&buffer[index..])? {
+                    index += end;
+                    tokens.push(from_utf8(token).unwrap().to_string());
                 } else {
                     return Ok(None);
                 }
             }
 
-            *start = index;
-            Ok(Some(Input::new(tokens)))
+            Ok(Some((Input::new(tokens), index)))
         } else {
             Ok(None)
         }
     }
 
-    fn try_next_token(&self, buffer: &String, index: &mut usize) -> Result<Option<String>, String> {
-        if buffer.as_bytes()[*index] != b'$' {
+    fn try_next_token<'a>(&self, buffer: &'a [u8]) -> Result<Option<(&'a [u8], usize)>, String> {
+        if buffer.is_empty() {
+            return Ok(None);
+        }
+        if buffer[0] != b'$' {
             return Err("expected '$'".to_string());
         }
 
-        if let Some(end) = buffer[*index..].find("\r\n") {
-            let part = &buffer[*index + 1..*index + end];
-            let len = part
-                .parse::<usize>()
-                .map_err(|_| "invalid bulk string length".to_string())?;
-            let start = *index + end + 2;
-            if len > buffer.len() - (start + 2) {
+        if let Some(end) = find_cr_lf(buffer) {
+            let len = parse_integer(&buffer[1..end])?;
+            if len < 0 {
+                return Err("invalid bulk string length".to_string());
+            }
+            let start = end + 2;
+            if len as usize > buffer.len() - (start + 2) {
                 return Ok(None);
             }
 
-            *index = start + len + 2;
-            Ok(Some(buffer[start..start + len].to_string()))
+            Ok(Some((
+                &buffer[start..start + len as usize],
+                start + len as usize + 2,
+            )))
         } else {
             Ok(None)
         }
@@ -88,6 +89,36 @@ impl Parser {
 
         parser.try_parse(&mut input)
     }
+}
+
+fn find_cr_lf(buffer: &[u8]) -> Option<usize> {
+    for (i, chunk) in buffer.windows(2).enumerate() {
+        if chunk == b"\r\n" {
+            return Some(i);
+        }
+    }
+
+    None
+}
+
+fn parse_integer(byte_slice: &[u8]) -> Result<i64, String> {
+    let mut result: i64 = 0;
+    let mut negative = false;
+
+    for (i, &byte) in byte_slice.iter().enumerate() {
+        if i == 0 && byte == b'-' {
+            negative = true;
+            continue;
+        }
+        if byte.is_ascii_digit() {
+            let digit = (byte - b'0') as i64;
+            result = result * 10 + digit;
+        } else {
+            return Err("invalid integer character".to_string());
+        }
+    }
+
+    Ok(if negative { -result } else { result })
 }
 
 pub trait Command {

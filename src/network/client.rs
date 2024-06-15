@@ -76,17 +76,14 @@ impl Client {
         store: &mut Store,
         registry: &Registry,
     ) -> io::Result<()> {
-        let mut buffer = from_utf8(self.incoming.as_slice()).unwrap().to_string();
-        let mut used = 0;
+        let mut index = 0;
 
         loop {
-            let mut index = 0;
-            match parser.try_next_input(&buffer, &mut index) {
-                Ok(Some(input)) => {
-                    used += index;
+            match parser.try_next_input(&self.incoming[index..]) {
+                Ok(Some((input, len))) => {
+                    index += len;
                     match parser.try_parse_command(input) {
                         Ok(command) => {
-                            buffer = buffer.split_off(index);
                             command.apply(store, self, registry)?;
                         }
                         Err(err) => {
@@ -105,7 +102,7 @@ impl Client {
             }
         }
 
-        self.incoming = self.incoming.split_off(used);
+        self.incoming = self.incoming.split_off(index);
         Ok(())
     }
 

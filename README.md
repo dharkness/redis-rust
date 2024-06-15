@@ -16,3 +16,13 @@ event loops, the Redis protocol and more.
    slow the first time you run it. Subsequent runs will be fast.
 1. Commit your changes and run `git push origin master` to submit your solution
    to CodeCrafters. Test output will be streamed to your terminal.
+
+# Next Steps
+
+- Parse raw buffer
+    - Read directly into incoming as a buffer (keep index)
+    - Parse from buffer without converting to a string (done)
+    - Input uses byte slices
+    - Parser uses tree of letters to find command
+    - Store uses byte slices
+- Move command running to server
