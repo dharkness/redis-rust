@@ -33,8 +33,9 @@ mod set;
 mod set_multiple;
 mod set_multiple_if_not_set;
 mod str_len;
+mod ttl;
 
-pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 22] {
+pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 23] {
     [
         ("APPEND", Box::new(append::AppendParser::new())),
         ("COMMAND", Box::new(command::CommandParser::new())),
@@ -64,5 +65,6 @@ pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 22] {
         ("RENAME", Box::new(rename::RenameParser::new())),
         ("SET", Box::new(set::SetParser::new())),
         ("STRLEN", Box::new(str_len::StrLenParser::new())),
+        ("TTL", Box::new(ttl::TimeToLiveParser::new())),
     ]
 }
