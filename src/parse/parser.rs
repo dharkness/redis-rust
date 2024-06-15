@@ -1,10 +1,9 @@
-use std::collections::HashMap;
 use std::io;
 use std::str::from_utf8;
 
 use mio::Registry;
 
-use crate::commands::get_commands;
+use crate::commands::CommandTree;
 use crate::network::Client;
 use crate::store::Store;
 
@@ -16,12 +15,9 @@ pub struct Parser {
 
 impl Parser {
     pub fn new() -> Self {
-        let mut commands = CommandTree::new();
-        for (name, parser) in get_commands() {
-            commands.insert(name, parser);
+        Self {
+            commands: CommandTree::new(),
         }
-
-        Self { commands }
     }
 
     pub fn try_next_input<'a>(
@@ -134,45 +130,4 @@ pub trait Apply {
 
 pub trait TryParse {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String>;
-}
-
-struct CommandTree {
-    parser: Option<Box<dyn TryParse>>,
-    children: HashMap<char, CommandTree>,
-}
-
-impl CommandTree {
-    fn new() -> Self {
-        Self {
-            parser: None,
-            children: HashMap::new(),
-        }
-    }
-
-    fn insert(&mut self, command: &str, parser: Box<dyn TryParse>) {
-        let mut current = self;
-
-        for c in command.chars() {
-            current = current
-                .children
-                .entry(c.to_ascii_uppercase())
-                .or_insert(CommandTree::new());
-        }
-
-        current.parser = Some(parser);
-    }
-
-    fn get(&self, command: &str) -> Option<&Box<dyn TryParse>> {
-        let mut current = self;
-
-        for c in command.chars() {
-            if let Some(next) = current.children.get(&(c.to_ascii_uppercase())) {
-                current = next;
-            } else {
-                return None;
-            }
-        }
-
-        current.parser.as_ref()
-    }
 }

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::parse::TryParse;
 
 mod prelude {
@@ -37,7 +39,7 @@ mod str_len;
 mod ttl;
 mod r#type;
 
-pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 26] {
+fn get_commands() -> [(&'static str, Box<dyn TryParse>); 26] {
     [
         ("APPEND", Box::new(append::AppendParser::new())),
         ("COMMAND", Box::new(command::CommandParser::new())),
@@ -72,4 +74,54 @@ pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 26] {
         ("TTL", Box::new(ttl::TimeToLiveParser::new())),
         ("TYPE", Box::new(r#type::TypeParser::new())),
     ]
+}
+
+pub struct CommandTree {
+    parser: Option<Box<dyn TryParse>>,
+    children: HashMap<char, CommandTree>,
+}
+
+impl CommandTree {
+    pub fn new() -> Self {
+        let mut tree = Self::new_node();
+        for (name, parser) in get_commands() {
+            tree.insert(name, parser);
+        }
+
+        tree
+    }
+
+    fn new_node() -> Self {
+        Self {
+            parser: None,
+            children: HashMap::new(),
+        }
+    }
+
+    fn insert(&mut self, command: &str, parser: Box<dyn TryParse>) {
+        let mut current = self;
+
+        for c in command.chars() {
+            current = current
+                .children
+                .entry(c.to_ascii_uppercase())
+                .or_insert(Self::new_node());
+        }
+
+        current.parser = Some(parser);
+    }
+
+    pub fn get(&self, command: &str) -> Option<&Box<dyn TryParse>> {
+        let mut current = self;
+
+        for c in command.chars() {
+            if let Some(next) = current.children.get(&(c.to_ascii_uppercase())) {
+                current = next;
+            } else {
+                return None;
+            }
+        }
+
+        current.parser.as_ref()
+    }
 }
