@@ -122,14 +122,17 @@ enum Expire {
 
 impl Expire {
     pub fn try_parse(token: &str, input: &mut Input) -> Result<Self, String> {
-        let time = input.next_int()? as u64;
+        let time = input.next_int()?;
+        if time <= 0 {
+            return Err("invalid SET time".to_string());
+        }
+
         let at = match token {
-            "EX" => Utc::now() + Duration::new(time, 0),
+            "EX" => Utc::now() + Duration::new(time as u64, 0),
             "PX" => {
                 Utc::now()
                     + if time >= 1_000 {
-                        let secs = time / 1_000;
-                        Duration::new(secs as u64, (time % 1_000) as u32 * 1_000_000)
+                        Duration::new(time as u64 / 1_000, (time % 1_000) as u32 * 1_000_000)
                     } else {
                         Duration::new(0, time as u32 * 1_000_000)
                     }
