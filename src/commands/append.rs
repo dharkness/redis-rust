@@ -9,7 +9,7 @@ struct Append {
 
 impl Append {
     pub fn new(key: String, value: String) -> Self {
-        Self{key, value}
+        Self { key, value }
     }
 }
 
@@ -29,7 +29,7 @@ pub struct AppendParser {}
 
 impl AppendParser {
     pub const fn new() -> Self {
-        Self{}
+        Self {}
     }
 }
 

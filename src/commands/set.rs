@@ -14,19 +14,29 @@ struct Set {
 
 impl Set {
     pub fn new(key: String, value: String) -> Self {
-        Self{key, value, when: When::Always, get: false, expire: Expire::Never}
+        Self {
+            key,
+            value,
+            when: When::Always,
+            get: false,
+            expire: Expire::Never,
+        }
     }
 }
 
 impl Command for Set {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         match self.when {
-            When::Exists => if !store.contains_key(&self.key) {
-                return client.write_null(registry);
-            },
-            When::NotExists => if store.contains_key(&self.key) {
-                return client.write_null(registry);
-            },
+            When::Exists => {
+                if !store.contains_key(&self.key) {
+                    return client.write_null(registry);
+                }
+            }
+            When::NotExists => {
+                if store.contains_key(&self.key) {
+                    return client.write_null(registry);
+                }
+            }
             When::Always => (),
         }
 
@@ -60,8 +70,11 @@ impl SetParser {
             mutators: vec![
                 (vec!["NX", "XX"], SetParser::try_when),
                 (vec!["GET"], SetParser::try_get),
-                (vec!["EX", "PX", "EXAT", "PXAT", "KEEPTTL"], SetParser::try_expire),
-            ]
+                (
+                    vec!["EX", "PX", "EXAT", "PXAT", "KEEPTTL"],
+                    SetParser::try_expire,
+                ),
+            ],
         }
     }
 
@@ -90,7 +103,12 @@ impl TryParse for SetParser {
         let key = input.next()?;
         let value = input.next()?;
 
-        Ok(Box::new(mutate("SET", &self.mutators, input, Set::new(key, value))?))
+        Ok(Box::new(mutate(
+            "SET",
+            &self.mutators,
+            input,
+            Set::new(key, value),
+        )?))
     }
 }
 
@@ -110,9 +128,7 @@ impl Expire {
     pub fn try_parse(token: &str, input: &mut Input) -> Result<Self, String> {
         let time = input.next_int()?;
         let at = match token {
-            "EX" => {
-                Utc::now() + Duration::new(time, 0)
-            }
+            "EX" => Utc::now() + Duration::new(time, 0),
             "PX" => {
                 let duration = if time >= 1_000 {
                     let secs = time / 1_000;
@@ -122,18 +138,14 @@ impl Expire {
                 };
                 Utc::now() + duration
             }
-            "EXAT" => {
-                match DateTime::from_timestamp_millis(1_000 * time as i64) {
-                    Some(at) => at,
-                    _ => return Err("invalid unix timestamp".to_string()),
-                }
-            }
-            "PXAT" => {
-                match DateTime::from_timestamp_millis(time as i64) {
-                    Some(at) => at,
-                    _ => return Err("invalid unix timestamp".to_string()),
-                }
-            }
+            "EXAT" => match DateTime::from_timestamp_millis(1_000 * time as i64) {
+                Some(at) => at,
+                _ => return Err("invalid unix timestamp".to_string()),
+            },
+            "PXAT" => match DateTime::from_timestamp_millis(time as i64) {
+                Some(at) => at,
+                _ => return Err("invalid unix timestamp".to_string()),
+            },
             "KEEPTTL" => return Ok(Expire::Keep),
             _ => return Err("invalid expiration code".to_string()),
         };

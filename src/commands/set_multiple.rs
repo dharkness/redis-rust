@@ -6,7 +6,7 @@ struct SetMultiple {
 
 impl SetMultiple {
     pub fn new(key_value_pairs: Vec<String>) -> Self {
-        Self{ key_value_pairs }
+        Self { key_value_pairs }
     }
 }
 
@@ -27,7 +27,7 @@ pub struct SetMultipleParser {}
 
 impl SetMultipleParser {
     pub fn new() -> Self {
-        Self{}
+        Self {}
     }
 }
 

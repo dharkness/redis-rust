@@ -6,7 +6,7 @@ struct StrLen {
 
 impl StrLen {
     pub fn new(key: String) -> Self {
-        Self{key}
+        Self { key }
     }
 }
 
@@ -24,7 +24,7 @@ pub struct StrLenParser {}
 
 impl StrLenParser {
     pub fn new() -> Self {
-        Self{}
+        Self {}
     }
 }
 

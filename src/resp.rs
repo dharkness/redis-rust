@@ -39,29 +39,34 @@ impl Value {
                             return Err("expected 2 or 4 arguments for SET".to_string());
                         }
                         match values[1].clone() {
-                            Value::String(key) => {
-                                match values[2].clone() {
-                                    Value::String(value) => {
-                                        if values.len() == 3 {
-                                            return Ok(Command::Set(key, value));
-                                        } else {
-                                            match values[3].clone() {
-                                                Value::String(arg) if arg.to_uppercase() == "PX" => {
-                                                    match values[4].clone() {
-                                                        Value::String(expiry) => {
-                                                            let ms = expiry.parse::<usize>().map_err(|_| "invalid array length".to_string())?;
-                                                            return Ok(Command::SetExpiry(key, value, ms));
-                                                        }
-                                                        _ => Err("expected PX for arg 3 of SET".to_string()),
+                            Value::String(key) => match values[2].clone() {
+                                Value::String(value) => {
+                                    if values.len() == 3 {
+                                        return Ok(Command::Set(key, value));
+                                    } else {
+                                        match values[3].clone() {
+                                            Value::String(arg) if arg.to_uppercase() == "PX" => {
+                                                match values[4].clone() {
+                                                    Value::String(expiry) => {
+                                                        let ms = expiry.parse::<usize>().map_err(
+                                                            |_| "invalid array length".to_string(),
+                                                        )?;
+                                                        return Ok(Command::SetExpiry(
+                                                            key, value, ms,
+                                                        ));
+                                                    }
+                                                    _ => {
+                                                        Err("expected PX for arg 3 of SET"
+                                                            .to_string())
                                                     }
                                                 }
-                                                _ => Err("expected PX for arg 3 of SET".to_string()),
                                             }
+                                            _ => Err("expected PX for arg 3 of SET".to_string()),
                                         }
                                     }
-                                    _ => Err("expected string for arg 2 of SET".to_string()),
                                 }
-                            }
+                                _ => Err("expected string for arg 2 of SET".to_string()),
+                            },
                             _ => Err("expected string for arg 1 of SET".to_string()),
                         }
                     }
@@ -99,13 +104,15 @@ pub struct Parser {
 
 impl Parser {
     pub fn new() -> Self {
-        Self { input: String::new() }
+        Self {
+            input: String::new(),
+        }
     }
 
-    pub fn add(&mut self, input: &str)  {
+    pub fn add(&mut self, input: &str) {
         self.input.push_str(input);
     }
-    
+
     pub fn try_parse_command(&mut self) -> Result<Option<Command>, String> {
         if self.input.is_empty() {
             return Ok(None);
@@ -116,9 +123,9 @@ impl Parser {
         let mut index = 0;
         if let Some(value) = self.try_parse_array(&mut index)? {
             self.input = self.input.split_off(index);
-            return Ok(Some(value.command()?))
+            return Ok(Some(value.command()?));
         } else {
-            return Ok(None)
+            return Ok(None);
         }
     }
 
@@ -141,16 +148,18 @@ impl Parser {
         debug_assert!(self.input.as_bytes()[*index] == b'*');
         if let Some(end) = self.input[*index..].find("\r\n") {
             println!("end: {}", end);
-            let line = &self.input[*index+1..*index+end];
+            let line = &self.input[*index + 1..*index + end];
             println!("line: {}", line);
-            let len = line.parse::<usize>().map_err(|_| "invalid array length".to_string())?;
+            let len = line
+                .parse::<usize>()
+                .map_err(|_| "invalid array length".to_string())?;
             let mut values = Vec::with_capacity(len);
             *index += end + 2;
             for _ in 0..len {
                 if let Some(value) = self.try_parse_value(index)? {
                     values.push(value);
                 } else {
-                    return Ok(None)
+                    return Ok(None);
                 }
             }
             Ok(Some(Value::Array(values)))
@@ -162,14 +171,18 @@ impl Parser {
     fn try_parse_bulk_string(&mut self, index: &mut usize) -> Result<Option<Value>, String> {
         debug_assert!(self.input.as_bytes()[*index] == b'$');
         if let Some(end) = self.input[*index..].find("\r\n") {
-            let line = &self.input[*index+1..*index+end];
-            let len = line.parse::<usize>().map_err(|_| "invalid bulk string length".to_string())?;
-            let start = *index+end+2;
+            let line = &self.input[*index + 1..*index + end];
+            let len = line
+                .parse::<usize>()
+                .map_err(|_| "invalid bulk string length".to_string())?;
+            let start = *index + end + 2;
             if len > self.input.len() - (start + 2) {
-                return Ok(None)
+                return Ok(None);
             }
             *index = start + len + 2;
-            Ok(Some(Value::String(self.input[start..start+len].to_string())))
+            Ok(Some(Value::String(
+                self.input[start..start + len].to_string(),
+            )))
         } else {
             Ok(None)
         }

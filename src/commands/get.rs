@@ -6,7 +6,7 @@ struct Get {
 
 impl Get {
     pub fn new(key: String) -> Self {
-        Self{key}
+        Self { key }
     }
 }
 
@@ -24,7 +24,7 @@ pub struct GetParser {}
 
 impl GetParser {
     pub fn new() -> Self {
-        Self{}
+        Self {}
     }
 }
 

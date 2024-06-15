@@ -8,7 +8,7 @@ struct GetRange {
 
 impl GetRange {
     pub fn new(key: String, start: i64, end: i64) -> Self {
-        Self{key, start, end}
+        Self { key, start, end }
     }
 }
 
@@ -55,15 +55,21 @@ pub struct GetRangeParser {}
 
 impl GetRangeParser {
     pub fn new() -> Self {
-        Self{}
+        Self {}
     }
 }
 
 impl TryParse for GetRangeParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Command>, String> {
         let key = input.next()?;
-        let start = input.next()?.parse::<i64>().map_err(|_| "invalid start".to_string())?;
-        let end = input.next()?.parse::<i64>().map_err(|_| "invalid end".to_string())?;
+        let start = input
+            .next()?
+            .parse::<i64>()
+            .map_err(|_| "invalid start".to_string())?;
+        let end = input
+            .next()?
+            .parse::<i64>()
+            .map_err(|_| "invalid end".to_string())?;
 
         Ok(Box::new(GetRange::new(key, start, end)))
     }

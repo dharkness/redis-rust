@@ -1,3 +1,14 @@
+mod prelude {
+    pub use std::io;
+
+    pub use mio::Registry;
+
+    pub use crate::client::Client;
+    pub use crate::input::Input;
+    pub use crate::parser::{mutate, Command, Mutators, TryParse};
+    pub use crate::store::Store;
+}
+
 mod append;
 mod copy;
 mod del;
@@ -9,17 +20,6 @@ mod set;
 mod set_multiple;
 mod set_multiple_if_not_set;
 mod str_len;
-
-mod prelude {
-    pub use std::io;
-    
-    pub use mio::Registry;
-    
-    pub use crate::parser::{Command, mutate, Mutators, TryParse};
-    pub use crate::store::Store;
-    pub use crate::client::Client;
-    pub use crate::input::Input;
-}
 
 use crate::parser::TryParse;
 
@@ -33,7 +33,10 @@ pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 11] {
         ("GETDEL", Box::new(get_del::GetDelParser::new())),
         ("GETRANGE", Box::new(get_range::GetRangeParser::new())),
         ("MSET", Box::new(set_multiple::SetMultipleParser::new())),
-        ("MSETNX", Box::new(set_multiple_if_not_set::SetMultipleIfNotSetParser::new())),
+        (
+            "MSETNX",
+            Box::new(set_multiple_if_not_set::SetMultipleIfNotSetParser::new()),
+        ),
         ("SET", Box::new(set::SetParser::new())),
         ("STRLEN", Box::new(str_len::StrLenParser::new())),
     ]

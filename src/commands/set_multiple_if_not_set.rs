@@ -6,7 +6,7 @@ struct SetMultipleIfNotSet {
 
 impl SetMultipleIfNotSet {
     pub fn new(key_value_pairs: Vec<String>) -> Self {
-        Self{ key_value_pairs }
+        Self { key_value_pairs }
     }
 }
 
@@ -32,7 +32,7 @@ pub struct SetMultipleIfNotSetParser {}
 
 impl SetMultipleIfNotSetParser {
     pub fn new() -> Self {
-        Self{}
+        Self {}
     }
 }
 

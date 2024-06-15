@@ -8,7 +8,11 @@ struct Copy {
 
 impl Copy {
     pub fn new(source: String, destination: String) -> Self {
-        Self{ source, destination, replace: false}
+        Self {
+            source,
+            destination,
+            replace: false,
+        }
     }
 }
 
@@ -31,9 +35,7 @@ pub struct CopyParser {
 impl CopyParser {
     pub fn new() -> Self {
         Self {
-            mutators: vec![
-                (vec!["REPLACE"], CopyParser::try_replace),
-            ]
+            mutators: vec![(vec!["REPLACE"], CopyParser::try_replace)],
         }
     }
 
@@ -48,6 +50,11 @@ impl TryParse for CopyParser {
         let source = input.next()?;
         let destination = input.next()?;
 
-        Ok(Box::new(mutate("SET", &self.mutators, input, Copy::new(source, destination))?))
+        Ok(Box::new(mutate(
+            "SET",
+            &self.mutators,
+            input,
+            Copy::new(source, destination),
+        )?))
     }
 }

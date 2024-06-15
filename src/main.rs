@@ -5,18 +5,18 @@
     dead_code
 )]
 
-mod resp;
 mod client;
-mod store;
 mod commands;
 mod input;
 mod parser;
+mod resp;
+mod store;
 
 use std::collections::HashMap;
 use std::io;
 
 use mio::event::Event;
-use mio::net::{TcpListener};
+use mio::net::TcpListener;
 use mio::{Events, Interest, Poll, Registry, Token};
 
 use client::Client;
@@ -76,7 +76,13 @@ fn main() -> io::Result<()> {
                 },
                 token => {
                     let done = if let Some(client) = clients.get_mut(&token) {
-                        handle_connection_event(poll.registry(), client, event, &parser, &mut store)?
+                        handle_connection_event(
+                            poll.registry(),
+                            client,
+                            event,
+                            &parser,
+                            &mut store,
+                        )?
                     } else {
                         // ignore event for unknown token
                         false
@@ -127,7 +133,7 @@ fn handle_connection_event(
                         return Ok(false);
                     }
                 }
-            },
+            }
             Err(err) => return Err(err),
         };
     }

@@ -6,7 +6,7 @@ struct GetDel {
 
 impl GetDel {
     pub fn new(key: String) -> Self {
-        Self{key}
+        Self { key }
     }
 }
 
@@ -24,7 +24,7 @@ pub struct GetDelParser {}
 
 impl GetDelParser {
     pub fn new() -> Self {
-        Self{}
+        Self {}
     }
 }
 

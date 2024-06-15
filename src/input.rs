@@ -4,7 +4,7 @@ pub struct Input {
 
 impl Input {
     pub fn new(tokens: Vec<String>) -> Self {
-        Self{ tokens }
+        Self { tokens }
     }
 
     pub fn len(&self) -> usize {

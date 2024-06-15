@@ -6,7 +6,7 @@ struct Del {
 
 impl Del {
     pub fn new(keys: Vec<String>) -> Self {
-        Self{keys}
+        Self { keys }
     }
 }
 
@@ -23,7 +23,7 @@ pub struct DelParser {}
 
 impl DelParser {
     pub fn new() -> Self {
-        Self{}
+        Self {}
     }
 }
 

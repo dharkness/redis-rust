@@ -7,14 +7,14 @@ use priority_queue::PriorityQueue;
 
 pub struct Store {
     values: HashMap<String, String>,
-    expirations: PriorityQueue<String, DateTime<Utc>>
+    expirations: PriorityQueue<String, DateTime<Utc>>,
 }
 
 impl Store {
     pub fn new() -> Self {
         Self {
             values: HashMap::new(),
-            expirations: PriorityQueue::new()
+            expirations: PriorityQueue::new(),
         }
     }
 
@@ -63,7 +63,7 @@ impl Store {
 
     pub fn expire_items(&mut self) {
         let now = Utc::now();
-        
+
         while let Some((key, at)) = self.expirations.peek() {
             if now >= *at {
                 self.values.remove(key);
@@ -94,14 +94,22 @@ impl Expiration {
             Duration::new(0, ms as u32 * 1000000)
         };
         let at = Utc::now().add(duration);
-        println!("will expire {} at {}", key, at.format("%Y-%m-%d %H:%M:%S").to_string());
+        println!(
+            "will expire {} at {}",
+            key,
+            at.format("%Y-%m-%d %H:%M:%S").to_string()
+        );
         Self { key, at }
     }
 
     fn expired(&self) -> bool {
         let now = Utc::now();
         if now >= self.at {
-            println!("expired key {} at {}", self.key, now.format("%Y-%m-%d %H:%M:%S").to_string());
+            println!(
+                "expired key {} at {}",
+                self.key,
+                now.format("%Y-%m-%d %H:%M:%S").to_string()
+            );
             true
         } else {
             false
