@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 
 use super::prelude::*;
 
-struct Expire {
+pub struct Expire {
     key: String,
     at: DateTime<Utc>,
     expiry: Expiry,
@@ -55,7 +55,7 @@ impl ExpireParser {
         }
     }
 
-    fn try_expiry(expire: &mut Expire, token: &String, _: &mut Input) -> Result<(), String> {
+    pub fn try_expiry(expire: &mut Expire, token: &String, _: &mut Input) -> Result<(), String> {
         expire.expiry = match token.as_str() {
             "NX" => Expiry::None,
             "XX" => Expiry::Has,
