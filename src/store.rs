@@ -3,7 +3,10 @@ use std::ops::Add;
 use std::time::Duration;
 
 use chrono::prelude::*;
+use itertools::Itertools;
 use priority_queue::PriorityQueue;
+
+use crate::pattern::Pattern;
 
 pub struct Store {
     values: HashMap<String, String>,
@@ -40,6 +43,13 @@ impl Store {
 
     pub fn contains_key(&self, key: &String) -> bool {
         self.values.contains_key(key)
+    }
+
+    pub fn keys(&self, pattern: &Pattern) -> Vec<&String> {
+        self.values
+            .keys()
+            .filter(|key| pattern.matches(key))
+            .collect_vec()
     }
 
     pub fn get(&self, key: &String) -> Option<&String> {

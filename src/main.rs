@@ -13,6 +13,7 @@ mod commands;
 mod input;
 mod network;
 mod parser;
+mod pattern;
 mod resp;
 mod store;
 

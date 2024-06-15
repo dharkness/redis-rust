@@ -120,6 +120,10 @@ impl Client {
         )
     }
 
+    pub fn write_string(&mut self, s: String, registry: &Registry) -> io::Result<()> {
+        self.write(s.as_bytes(), registry)
+    }
+
     pub fn write_null(&mut self, registry: &Registry) -> io::Result<()> {
         self.write(b"_\r\n", registry)
     }
@@ -129,29 +133,35 @@ impl Client {
     }
 
     pub fn write_simple_error(&mut self, error: &str, registry: &Registry) -> io::Result<()> {
-        self.write(format!("-{}\r\n", error).as_bytes(), registry)
+        self.write_string(format!("-{}\r\n", error), registry)
     }
 
     pub fn write_bulk_error(&mut self, error: &str, registry: &Registry) -> io::Result<()> {
-        self.write(
-            format!("!{}\r\n{}\r\n", error.len(), error).as_bytes(),
-            registry,
-        )
+        self.write_string(format!("!{}\r\n{}\r\n", error.len(), error), registry)
     }
 
     pub fn write_simple_string(&mut self, value: &str, registry: &Registry) -> io::Result<()> {
-        self.write(format!("+{}\r\n", value).as_bytes(), registry)
+        self.write_string(format!("+{}\r\n", value), registry)
     }
 
     pub fn write_bulk_string(&mut self, value: &str, registry: &Registry) -> io::Result<()> {
-        self.write(
-            format!("${}\r\n{}\r\n", value.len(), value).as_bytes(),
-            registry,
-        )
+        self.write_string(format!("${}\r\n{}\r\n", value.len(), value), registry)
     }
 
     pub fn write_integer(&mut self, value: i64, registry: &Registry) -> io::Result<()> {
-        self.write(format!(":{}\r\n", value).as_bytes(), registry)
+        self.write_string(format!(":{}\r\n", value), registry)
+    }
+
+    pub fn write_array(&mut self, values: &[&String], registry: &Registry) -> io::Result<()> {
+        self.write_string(format!("*{}\r\n", values.len()), registry)?;
+        for value in values {
+            self.write_bulk_string(*value, registry)?;
+        }
+        Ok(())
+    }
+
+    pub fn write_empty_array(&mut self, registry: &Registry) -> io::Result<()> {
+        self.write(b"*0\r\n", registry)
     }
 
     pub fn send(&mut self, registry: &Registry) -> io::Result<bool> {

@@ -24,6 +24,7 @@ mod get;
 mod get_del;
 mod get_ex;
 mod get_range;
+mod keys;
 mod p_expire;
 mod p_expire_at;
 mod p_expire_time;
@@ -37,7 +38,7 @@ mod str_len;
 mod ttl;
 mod r#type;
 
-pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 25] {
+pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 26] {
     [
         ("APPEND", Box::new(append::AppendParser::new())),
         ("COMMAND", Box::new(command::CommandParser::new())),
@@ -52,6 +53,7 @@ pub fn get_commands() -> [(&'static str, Box<dyn TryParse>); 25] {
         ("GETDEL", Box::new(get_del::GetDelParser::new())),
         ("GETEX", Box::new(get_ex::GetExParser::new())),
         ("GETRANGE", Box::new(get_range::GetRangeParser::new())),
+        ("KEYS", Box::new(keys::KeysParser::new())),
         ("MSET", Box::new(set_multiple::SetMultipleParser::new())),
         (
             "MSETNX",

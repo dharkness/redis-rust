@@ -9,3 +9,5 @@ tokio = { version = "1.37.0", features = ["full"] }
 mio = "0.8.11"
 chrono = "0.4.38"
 priority-queue = "2.0.3"
+itertools = "0.13.0"
+regex = "1.10.4"
