@@ -1,35 +1,36 @@
-use std::io::{BufRead, BufReader, Write};
-use std::net::TcpListener;
+use tokio::net::TcpListener;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
-fn main() {
-    println!("Logs from your program will appear here!");
+#[tokio::main]
+async fn main() {
+    println!("listening for connections");
 
-    let listener = TcpListener::bind("127.0.0.1:6379").unwrap();
+    let listener = TcpListener::bind("127.0.0.1:6379").await.unwrap();
 
-    for stream in listener.incoming() {
-        match stream {
-            Ok(mut _stream) => {
+    loop {
+        match listener.accept().await {
+            Ok((mut stream, _)) => {
                 println!("accepted new connection");
-                let mut reader = BufReader::new(_stream.try_clone().expect("clone failed"));
+                tokio::spawn(async move {
+                    let mut buf = [0; 1024];
 
-                loop {
-                    let mut line = String::new();
-                    match reader.read_line(&mut line) {
-                        Ok(len) => {
-                            if len == 0 {
+                    loop {
+                        match stream.read(&mut buf).await {
+                            Ok(len) => {
+                                if len == 0 {
+                                    break;
+                                }
+                                // if len >= 4 && &buf[..4] == b"PING" {
+                                    stream.write_all(b"+PONG\r\n").await.expect("write failed");
+                                // }
+                            }
+                            Err(e) => {
+                                println!("error reading: {}", e);
                                 break;
                             }
-                            println!("received: {}", line.trim());
-                            if len >= 4 && &line[..4] == "PING" {
-                                _stream.write_all(b"+PONG\r\n").expect("write failed");
-                            }
-                        }
-                        Err(e) => {
-                            println!("error reading: {}", e);
-                            break;
                         }
                     }
-                }
+                });
             }
             Err(e) => {
                 println!("error: {}", e);
