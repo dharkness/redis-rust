@@ -7,13 +7,14 @@ use mio::{Interest, Registry, Token};
 use mio::event::Source;
 
 use crate::{interrupted, would_block};
-use crate::resp::{Command, Parser};
+use crate::commands::Parser;
+use crate::store::Store;
 
 pub struct Client {
     token: Token,
     stream: TcpStream,
+    incoming: Vec<u8>,
     outgoing: Vec<u8>,
-    parser: Parser,
 }
 
 impl Client {
@@ -21,8 +22,8 @@ impl Client {
         Self {
             token,
             stream,
+            incoming: Vec::with_capacity(1024),
             outgoing: Vec::with_capacity(4 * 1024),
-            parser: Parser::new(),
         }
     }
 
@@ -55,7 +56,7 @@ impl Client {
                 Err(ref err) if would_block(err) => {
                     println!("read {}", from_utf8(&buf[..bytes_read]).unwrap());
 
-                    self.parser.add(from_utf8(&buf[..bytes_read]).unwrap());
+                    self.incoming.extend_from_slice(&buf[..bytes_read]);
 
                     return Ok(false);
                 }
@@ -66,14 +67,68 @@ impl Client {
             };
         }
     }
-
-    pub fn try_parse_command(&mut self) -> Result<Option<Command>, String> {
-        self.parser.try_parse_command()
+    
+    pub fn run_commands(&mut self, parser: &Parser, store: &mut Store, registry: &Registry) -> io::Result<()> {
+        let mut buffer = from_utf8(self.incoming.as_slice()).unwrap().to_string();
+        let mut used = 0;
+        
+        loop {
+            let mut index = 0;
+            match parser.try_next_input(&buffer, &mut index) {
+                Ok(Some(input)) => {
+                    used += index;
+                    match parser.try_parse_command(input) {
+                        Ok(command) => {
+                            buffer = buffer.split_off(index);
+                            command.apply(store, self, registry)?;
+                        }
+                        Err(err) => {
+                            self.write_simple_error(&err, registry)?;
+                            break;
+                        }
+                    }
+                }
+                Ok(None) => {
+                    break;
+                }
+                Err(err) => {
+                    self.write_simple_error(&err, registry)?;
+                    break;
+                }
+            }
+        }
+        
+        self.incoming = self.incoming.split_off(used);
+        Ok(())
     }
 
     pub fn write(&mut self, data: &[u8], registry: &Registry) -> io::Result<()> {
         self.outgoing.extend_from_slice(data);
         self.stream.reregister(registry, self.token, Interest::READABLE | Interest::WRITABLE)
+    }
+
+    pub fn write_null(&mut self, registry: &Registry) -> io::Result<()> {
+        self.write(b"_\r\n", registry)
+    }
+
+    pub fn write_ok(&mut self, registry: &Registry) -> io::Result<()> {
+        self.write(b"+OK\r\n", registry)
+    }
+
+    pub fn write_simple_error(&mut self, error: &String, registry: &Registry) -> io::Result<()> {
+        self.write(format!("-{}\r\n", error).as_bytes(), registry)
+    }
+
+    pub fn write_bulk_error(&mut self, error: &String, registry: &Registry) -> io::Result<()> {
+        self.write(format!("!{}\r\n{}\r\n", error.len(), error).as_bytes(), registry)
+    }
+
+    pub fn write_simple_string(&mut self, value: &String, registry: &Registry) -> io::Result<()> {
+        self.write(format!("+{}\r\n", value).as_bytes(), registry)
+    }
+
+    pub fn write_bulk_string(&mut self, value: &String, registry: &Registry) -> io::Result<()> {
+        self.write(format!("${}\r\n{}\r\n", value.len(), value).as_bytes(), registry)
     }
 
     pub fn send(&mut self, registry: &Registry) -> io::Result<bool> {

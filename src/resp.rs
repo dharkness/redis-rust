@@ -105,7 +105,7 @@ impl Parser {
     pub fn add(&mut self, input: &str)  {
         self.input.push_str(input);
     }
-
+    
     pub fn try_parse_command(&mut self) -> Result<Option<Command>, String> {
         if self.input.is_empty() {
             return Ok(None);

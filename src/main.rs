@@ -1,6 +1,14 @@
+#![allow(
+    clippy::collapsible_else_if,
+    clippy::collapsible_if,
+    clippy::too_many_arguments,
+    dead_code
+)]
+
 mod resp;
 mod client;
 mod store;
+mod commands;
 
 use std::collections::HashMap;
 use std::io;
@@ -9,13 +17,17 @@ use mio::event::Event;
 use mio::net::{TcpListener};
 use mio::{Events, Interest, Poll, Registry, Token};
 
-use client::Client;
-use crate::resp::Command;
+use crate::commands::Parser;
 use crate::store::Store;
+
+use client::Client;
 
 const SERVER: Token = Token(0);
 
 fn main() -> io::Result<()> {
+    let parser = Parser::new();
+    let mut store = Store::new();
+
     let mut poll = Poll::new()?;
     let mut events = Events::with_capacity(128);
 
@@ -25,7 +37,6 @@ fn main() -> io::Result<()> {
     poll.registry()
         .register(&mut server, SERVER, Interest::READABLE)?;
 
-    let mut store = Store::new();
     let mut clients = HashMap::new();
     let mut unique_token = Token(SERVER.0 + 1);
 
@@ -64,7 +75,7 @@ fn main() -> io::Result<()> {
                 },
                 token => {
                     let done = if let Some(client) = clients.get_mut(&token) {
-                        handle_connection_event(poll.registry(), client, event, &mut store)?
+                        handle_connection_event(poll.registry(), client, event, &parser, &mut store)?
                     } else {
                         // ignore event for unknown token
                         false
@@ -90,6 +101,7 @@ fn handle_connection_event(
     registry: &Registry,
     client: &mut Client,
     event: &Event,
+    parser: &Parser,
     store: &mut Store,
 ) -> io::Result<bool> {
     if event.is_writable() {
@@ -106,16 +118,12 @@ fn handle_connection_event(
         match client.receive(registry) {
             Ok(true) => return Ok(true),
             Ok(false) => {
-                loop {
-                    match client.try_parse_command() {
-                        Ok(None) => return Ok(false),
-                        Ok(Some(command)) => {
-                            process_command(registry, client, store, command)?;
-                        }
-                        Err(err) => {
-                            println!("error: {}", err);
-                            return Ok(true);
-                        }
+                store.expire_items();
+                match client.run_commands(parser, store, registry) {
+                    Ok(()) => return Ok(false),
+                    Err(err) => {
+                        println!("error: {}", err);
+                        return Ok(false);
                     }
                 }
             },
@@ -132,27 +140,4 @@ fn would_block(err: &io::Error) -> bool {
 
 fn interrupted(err: &io::Error) -> bool {
     err.kind() == io::ErrorKind::Interrupted
-}
-
-fn process_command(registry: &Registry, client: &mut Client, store: &mut Store, command: Command) -> io::Result<()> {
-    match command {
-        Command::Ping => client.write(b"+PONG\r\n", registry)?,
-        Command::Echo(msg) => client.write(format!("${}\r\n{}\r\n", msg.len(), msg).as_bytes(), registry)?,
-        Command::Get(key) => {
-            if let Some(value) = store.get(key) {
-                client.write(format!("${}\r\n{}\r\n", value.len(), value).as_bytes(), registry)?;
-            } else {
-                client.write(b"$-1\r\n", registry)?;
-            }
-        }
-        Command::Set(key, value) => {
-            store.set(key, value);
-            client.write(b"+OK\r\n", registry)?;
-        }
-        Command::SetExpiry(key, value, ms) => {
-            store.set_with_expiration(key, value, ms);
-            client.write(b"+OK\r\n", registry)?;
-        }
-    }
-    Ok(())
 }

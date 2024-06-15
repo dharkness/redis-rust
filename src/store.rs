@@ -1,41 +1,49 @@
-use std::collections::{BinaryHeap, HashMap};
+use std::collections::HashMap;
 use std::ops::Add;
-use std::time::{Duration};
+use std::time::Duration;
 
 use chrono::prelude::*;
+use priority_queue::PriorityQueue;
 
 pub struct Store {
     values: HashMap<String, String>,
-    expirations: BinaryHeap<Expiration>,
+    expirations: PriorityQueue<String, DateTime<Utc>>
 }
 
 impl Store {
     pub fn new() -> Self {
         Self {
             values: HashMap::new(),
-            expirations: BinaryHeap::new(),
+            expirations: PriorityQueue::new()
         }
     }
 
-    pub fn set(&mut self, key: String, value: String) {
-        self.expire_items();
-        self.values.insert(key, value);
+    pub fn set(&mut self, key: &String, value: &String) {
+        self.values.insert(key.clone(), value.clone());
     }
 
-    pub fn set_with_expiration(&mut self, key: String, value: String, ms: usize) {
-        self.values.insert(key.clone(), value);
-        self.expirations.push(Expiration::new(key, ms));
+    pub fn contains_key(&mut self, key: &String) -> bool {
+        self.values.contains_key(key)
     }
 
-    pub fn get(&mut self, key: String) -> Option<&String> {
-        self.expire_items();
-        self.values.get(&key)
+    pub fn get(&mut self, key: &String) -> Option<&String> {
+        self.values.get(key)
     }
 
-    fn expire_items(&mut self) {
-        while let Some(expiration) = self.expirations.peek() {
-            if expiration.expired() {
-                self.values.remove(expiration.key());
+    pub fn keep_forever(&mut self, key: &String) {
+        self.expirations.remove(key);
+    }
+
+    pub fn expire_at(&mut self, key: &String, at: &DateTime<Utc>) {
+        self.expirations.push(key.clone(), at.clone());
+    }
+
+    pub fn expire_items(&mut self) {
+        let now = Utc::now();
+        
+        while let Some((key, at)) = self.expirations.peek() {
+            if now >= *at {
+                self.values.remove(key);
                 self.expirations.pop();
             } else {
                 break;
@@ -51,6 +59,10 @@ struct Expiration {
 }
 
 impl Expiration {
+    pub fn new_at(key: String, at: DateTime<Utc>) -> Self {
+        Self { key, at }
+    }
+
     fn new(key: String, ms: usize) -> Self {
         let duration = if ms >= 1000 {
             let secs = ms / 1000;
