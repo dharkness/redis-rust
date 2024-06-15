@@ -7,7 +7,7 @@ use mio::event::Event;
 use mio::net::TcpListener;
 
 use crate::parse::Parser;
-use crate::store::Store;
+use crate::storage::Store;
 
 use super::{Client, interrupted};
 

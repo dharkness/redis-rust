@@ -9,7 +9,7 @@ mod prelude {
 
     pub use crate::network::Client;
     pub use crate::parse::{Apply, Expiration, Input, Options, parse_options, TryParse};
-    pub use crate::store::{Pattern, Store};
+    pub use crate::storage::{Pattern, Store};
 }
 
 mod append;

@@ -13,7 +13,7 @@ mod commands;
 mod network;
 mod parse;
 mod resp;
-mod store;
+mod storage;
 
 fn main() -> io::Result<()> {
     let addr = "127.0.0.1:6379".parse().expect("unable to parse address");

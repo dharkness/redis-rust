@@ -5,7 +5,7 @@ use mio::Registry;
 
 use crate::commands::CommandTree;
 use crate::network::Client;
-use crate::store::Store;
+use crate::storage::Store;
 
 use super::Input;
 
