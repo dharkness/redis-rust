@@ -144,6 +144,8 @@ pub fn mutate<T>(
     input: &mut Input,
     mut target: T,
 ) -> Result<T, String> {
+    let mut used_ops = Vec::new();
+
     'outer: while input.has_next() {
         let token = input.next_token().unwrap();
 
@@ -151,6 +153,11 @@ pub fn mutate<T>(
         for (ref tokens, ref op) in mutators {
             println!("tokens: {:?}", tokens);
             if tokens.contains(&token.as_str()) {
+                if used_ops.contains(&op) {
+                    return Err(format!("duplicate {} option {}", command, token));
+                }
+
+                used_ops.push(op);
                 op(&mut target, &token, input)?;
                 continue 'outer;
             }
