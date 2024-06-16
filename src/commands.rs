@@ -5,6 +5,7 @@ use crate::parse::TryParse;
 mod prelude {
     pub use std::io;
 
+    pub use chrono::Utc;
     pub use mio::Registry;
 
     pub use crate::network::Client;

@@ -1,7 +1,5 @@
 use std::time::Duration;
 
-use chrono::Utc;
-
 use super::expire::{Expire, ExpireParser};
 use super::prelude::*;
 
