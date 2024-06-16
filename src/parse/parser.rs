@@ -90,7 +90,13 @@ impl Parser {
             .get(command)
             .ok_or("unknown command".to_string())?;
 
-        parser.try_parse(&mut input)
+        parser.try_parse(&mut input).and_then(|parsed| {
+            if input.has_next() {
+                Err("syntax error".to_string())
+            } else {
+                Ok(parsed)
+            }
+        })
     }
 }
 
