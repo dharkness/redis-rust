@@ -13,7 +13,10 @@ impl Get {
 impl Apply for Get {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         if let Some(value) = store.get(&self.key) {
-            client.write_bulk_string(value, registry)
+            match value {
+                Value::String(s) => client.write_bulk_string(s, registry),
+                _ => client.write_simple_error(WRONG_TYPE, registry),
+            }
         } else {
             client.write_null(registry)
         }

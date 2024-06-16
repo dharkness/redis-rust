@@ -36,6 +36,12 @@ impl Apply for Set {
             When::Always => (),
         }
 
+        let previous = if self.get {
+            store.get(&self.key).map(|Value::String(s)| s.clone())
+        } else {
+            None
+        };
+
         match self.expire {
             Expiration::Keep => (),
             Expiration::Never => {
@@ -51,15 +57,10 @@ impl Apply for Set {
             }
         }
 
-        if self.get {
-            if let Some(previous) = store.set(&self.key, &self.value) {
-                client.write_bulk_string(previous.as_str(), registry)
-            } else {
-                client.write_null(registry)
-            }
-        } else {
-            store.set(&self.key, &self.value);
-            client.write_ok(registry)
+        store.set(&self.key, Value::new_string(self.value.clone()));
+        match previous {
+            Some(s) => client.write_bulk_string(&s, registry),
+            None => client.write_null(registry),
         }
     }
 }

@@ -1,3 +1,5 @@
+use crate::storage::Value;
+
 use super::prelude::*;
 
 const NONE: &[u8] = b"+none\r\n";
@@ -15,8 +17,10 @@ impl Type {
 
 impl Apply for Type {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
-        if store.contains_key(&self.key) {
-            client.write(STRING, registry)
+        if let Some(value) = store.get(&self.key) {
+            match value {
+                Value::String(_) => client.write(STRING, registry),
+            }
         } else {
             client.write(NONE, registry)
         }

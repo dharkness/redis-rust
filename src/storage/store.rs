@@ -4,10 +4,10 @@ use chrono::prelude::*;
 use itertools::Itertools;
 use priority_queue::PriorityQueue;
 
-use super::Pattern;
+use super::{Pattern, Value};
 
 pub struct Store {
-    values: HashMap<String, String>,
+    values: HashMap<String, Value>,
     expirations: PriorityQueue<String, DateTime<Utc>>,
 }
 
@@ -19,8 +19,8 @@ impl Store {
         }
     }
 
-    pub fn set(&mut self, key: &str, value: &str) -> Option<String> {
-        self.values.insert(key.to_string(), value.to_string())
+    pub fn set(&mut self, key: &str, value: Value) -> Option<Value> {
+        self.values.insert(key.to_string(), value)
     }
 
     pub fn rename(&mut self, key: &str, new_key: &str) -> bool {
@@ -51,19 +51,18 @@ impl Store {
             .collect_vec()
     }
 
-    pub fn get(&self, key: &str) -> Option<&str> {
-        self.values.get(key).map(|value| value.as_str())
+    pub fn get(&self, key: &str) -> Option<&Value> {
+        self.values.get(key)
     }
 
-    pub fn get_and_remove(&mut self, key: &str) -> Option<String> {
+    pub fn get_and_remove(&mut self, key: &str) -> Option<Value> {
         self.expirations.remove(key);
         self.values.remove(key)
     }
 
     pub fn copy(&mut self, source: &str, destination: &str) -> bool {
         if let Some(value) = self.get(source) {
-            self.values
-                .insert(destination.to_string(), value.to_string());
+            self.values.insert(destination.to_string(), value.clone());
             true
         } else {
             false

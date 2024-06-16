@@ -15,13 +15,18 @@ impl Append {
 
 impl Apply for Append {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
-        let new_value = if let Some(current) = store.get(&self.key) {
-            current.to_string().add(&self.value)
+        let new_value = if let Some(value) = store.get(&self.key) {
+            match value {
+                Value::String(s) => s.clone().add(&self.value),
+                _ => return client.write_simple_error(WRONG_TYPE, registry),
+            }
         } else {
             self.value.clone()
         };
-        store.set(&self.key, &new_value);
-        client.write_integer(new_value.len() as i64, registry)
+
+        let len = new_value.len();
+        store.set(&self.key, Value::new_string(new_value));
+        client.write_integer(len as i64, registry)
     }
 }
 

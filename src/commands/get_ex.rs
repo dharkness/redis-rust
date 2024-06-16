@@ -17,23 +17,28 @@ impl GetEx {
 impl Apply for GetEx {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         if let Some(value) = store.get(&self.key) {
-            let result = client.write_bulk_string(value, registry);
+            match value {
+                Value::String(s) => {
+                    let result = client.write_bulk_string(s, registry);
 
-            match self.expire {
-                Expiration::Keep => (),
-                Expiration::Never => {
-                    store.persist(&self.key);
-                }
-                Expiration::At(at) => {
-                    if at > Utc::now() {
-                        store.expire_at(&self.key, &at);
-                    } else {
-                        store.remove(&self.key);
+                    match self.expire {
+                        Expiration::Keep => (),
+                        Expiration::Never => {
+                            store.persist(&self.key);
+                        }
+                        Expiration::At(at) => {
+                            if at > Utc::now() {
+                                store.expire_at(&self.key, &at);
+                            } else {
+                                store.remove(&self.key);
+                            }
+                        }
                     }
-                }
-            }
 
-            result
+                    result
+                }
+                _ => client.write_simple_error(WRONG_TYPE, registry),
+            }
         } else {
             client.write_null(registry)
         }

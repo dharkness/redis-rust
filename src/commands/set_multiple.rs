@@ -16,7 +16,10 @@ impl Apply for SetMultiple {
             client.write_simple_error("wrong number of MSET arguments", registry)
         } else {
             for i in (0..self.key_value_pairs.len()).step_by(2) {
-                store.set(&self.key_value_pairs[i], &self.key_value_pairs[i + 1]);
+                store.set(
+                    &self.key_value_pairs[i],
+                    Value::new_string(self.key_value_pairs[i + 1].clone()),
+                );
             }
             client.write_ok(registry)
         }

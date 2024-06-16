@@ -13,7 +13,10 @@ impl StrLen {
 impl Apply for StrLen {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         if let Some(value) = store.get(&self.key) {
-            client.write_integer(value.len() as i64, registry)
+            match value {
+                Value::String(s) => client.write_integer(s.len() as i64, registry),
+                _ => client.write_simple_error(WRONG_TYPE, registry),
+            }
         } else {
             client.write_integer(0, registry)
         }

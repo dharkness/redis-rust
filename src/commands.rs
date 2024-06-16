@@ -8,9 +8,10 @@ mod prelude {
     pub use chrono::Utc;
     pub use mio::Registry;
 
+    pub use crate::errors::*;
     pub use crate::network::Client;
     pub use crate::parse::{Apply, Expiration, Input, Options, parse_options, TryParse};
-    pub use crate::storage::{Pattern, Store};
+    pub use crate::storage::{Pattern, SetIfResult, Store, Value};
 }
 
 mod append;

@@ -2,7 +2,8 @@
     clippy::collapsible_else_if,
     clippy::collapsible_if,
     clippy::too_many_arguments,
-    dead_code
+    dead_code,
+    unused_imports
 )]
 
 use std::io;
@@ -10,6 +11,7 @@ use std::io;
 use crate::network::Server;
 
 mod commands;
+mod errors;
 mod network;
 mod parse;
 mod resp;
