@@ -35,13 +35,20 @@ mod p_ttl;
 mod persist;
 mod rename;
 mod set;
+mod set_add;
+mod set_card;
+mod set_is_member;
+mod set_is_member_multiple;
+mod set_members;
+mod set_move;
 mod set_multiple;
 mod set_multiple_if_not_set;
+mod set_remove;
 mod str_len;
 mod ttl;
 mod r#type;
 
-fn get_commands() -> [(&'static str, Box<dyn TryParse>); 26] {
+fn get_commands() -> [(&'static str, Box<dyn TryParse>); 33] {
     [
         ("APPEND", Box::new(append::AppendParser::new())),
         ("COMMAND", Box::new(command::CommandParser::new())),
@@ -71,7 +78,20 @@ fn get_commands() -> [(&'static str, Box<dyn TryParse>); 26] {
         ),
         ("PTTL", Box::new(p_ttl::PTimeToLiveParser::new())),
         ("RENAME", Box::new(rename::RenameParser::new())),
+        ("SADD", Box::new(set_add::SetAddParser::new())),
+        ("SCARD", Box::new(set_card::SetCardParser::new())),
+        ("SMOVE", Box::new(set_move::SetMoveParser::new())),
         ("SET", Box::new(set::SetParser::new())),
+        (
+            "SISMEMBER",
+            Box::new(set_is_member::SetIsMemberParser::new()),
+        ),
+        ("SMEMBERS", Box::new(set_members::SetMembersParser::new())),
+        (
+            "SMISMEMBER",
+            Box::new(set_is_member_multiple::SetIsMemberMultipleParser::new()),
+        ),
+        ("SREM", Box::new(set_remove::SetRemoveParser::new())),
         ("STRLEN", Box::new(str_len::StrLenParser::new())),
         ("TTL", Box::new(ttl::TimeToLiveParser::new())),
         ("TYPE", Box::new(r#type::TypeParser::new())),

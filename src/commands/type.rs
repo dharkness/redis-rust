@@ -3,6 +3,7 @@ use crate::storage::Value;
 use super::prelude::*;
 
 const NONE: &[u8] = b"+none\r\n";
+const SET: &[u8] = b"+set\r\n";
 const STRING: &[u8] = b"+string\r\n";
 
 struct Type {
@@ -17,13 +18,16 @@ impl Type {
 
 impl Apply for Type {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
-        if let Some(value) = store.get(&self.key) {
-            match value {
-                Value::String(_) => client.write(STRING, registry),
-            }
-        } else {
-            client.write(NONE, registry)
-        }
+        client.write(
+            match store.get(&self.key) {
+                Some(value) => match value {
+                    Value::Set(_) => SET,
+                    Value::String(_) => STRING,
+                },
+                None => NONE,
+            },
+            registry,
+        )
     }
 }
 

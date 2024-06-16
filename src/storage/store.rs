@@ -88,6 +88,22 @@ impl Store {
         }
     }
 
+    pub fn get_mut(&mut self, key: &str) -> Option<&mut Value> {
+        self.values.get_mut(key)
+    }
+
+    pub fn get_mut_if_kind(&mut self, kind: Kind, key: &str) -> IfKindResult<&mut Value> {
+        if let Some(value) = self.values.get_mut(key) {
+            if value.kind() == kind {
+                IfKindResult::Matched(value)
+            } else {
+                IfKindResult::NotMatched
+            }
+        } else {
+            IfKindResult::NotSet
+        }
+    }
+
     pub fn get_and_remove(&mut self, key: &str) -> Option<Value> {
         self.expirations.remove(key);
         self.values.remove(key)
@@ -149,4 +165,20 @@ pub enum IfKindResult<T> {
     NotSet,
     NotMatched,
     Matched(T),
+}
+
+impl<T> IfKindResult<T> {
+    pub fn expect(&self, kind: &str) -> &T {
+        match self {
+            IfKindResult::Matched(value) => value,
+            _ => panic!("expected {}", kind),
+        }
+    }
+
+    pub fn expect_mut(&mut self, kind: &str) -> &mut T {
+        match self {
+            IfKindResult::Matched(value) => value,
+            _ => panic!("expected {}", kind),
+        }
+    }
 }

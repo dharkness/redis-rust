@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::io;
 use std::io::{Read, Write};
 use std::str::from_utf8;
@@ -144,12 +145,24 @@ impl Client {
         self.write_string(format!("+{}\r\n", value), registry)
     }
 
+    pub fn write_empty_simple_string(&mut self, registry: &Registry) -> io::Result<()> {
+        self.write(b"+\r\n", registry)
+    }
+
     pub fn write_bulk_string(&mut self, value: &str, registry: &Registry) -> io::Result<()> {
         self.write_string(format!("${}\r\n{}\r\n", value.len(), value), registry)
     }
 
+    pub fn write_empty_bulk_string(&mut self, registry: &Registry) -> io::Result<()> {
+        self.write(b"$0\r\n\r\n", registry)
+    }
+
     pub fn write_integer(&mut self, value: i64, registry: &Registry) -> io::Result<()> {
         self.write_string(format!(":{}\r\n", value), registry)
+    }
+
+    pub fn write_zero(&mut self, registry: &Registry) -> io::Result<()> {
+        self.write(b":0\r\n", registry)
     }
 
     pub fn write_array(&mut self, values: &[&str], registry: &Registry) -> io::Result<()> {
@@ -162,6 +175,18 @@ impl Client {
 
     pub fn write_empty_array(&mut self, registry: &Registry) -> io::Result<()> {
         self.write(b"*0\r\n", registry)
+    }
+
+    pub fn write_set(&mut self, members: &HashSet<String>, registry: &Registry) -> io::Result<()> {
+        self.write_string(format!("~{}\r\n", members.len()), registry)?;
+        for member in members {
+            self.write_bulk_string(member, registry)?;
+        }
+        Ok(())
+    }
+
+    pub fn write_empty_set(&mut self, registry: &Registry) -> io::Result<()> {
+        self.write(b"~0\r\n", registry)
     }
 
     pub fn send(&mut self, registry: &Registry) -> io::Result<bool> {

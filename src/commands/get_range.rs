@@ -1,7 +1,5 @@
 use super::prelude::*;
 
-const EMPTY: &[u8] = b"$0\r\n\r\n";
-
 struct GetRange {
     key: String,
     start: i64,
@@ -44,7 +42,7 @@ impl Apply for GetRange {
                 if end > start {
                     client.write_bulk_string(&s[start as usize..end as usize], registry)
                 } else {
-                    client.write(EMPTY, registry)
+                    client.write_empty_bulk_string(registry)
                 }
             }
             IfKindResult::NotSet => client.write_null(registry),
