@@ -1,10 +1,11 @@
+use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::HashMap;
 
 use chrono::prelude::*;
 use itertools::Itertools;
 use priority_queue::PriorityQueue;
 
-use super::{Pattern, Value};
+use super::{Kind, Pattern, Value};
 
 pub struct Store {
     values: HashMap<String, Value>,
@@ -21,6 +22,22 @@ impl Store {
 
     pub fn set(&mut self, key: &str, value: Value) -> Option<Value> {
         self.values.insert(key.to_string(), value)
+    }
+
+    pub fn set_if_kind(&mut self, kind: Kind, key: &str, value: Value) -> IfKindResult<Value> {
+        match self.values.entry(key.to_string()) {
+            Occupied(mut entry) => {
+                if entry.get().kind() == kind {
+                    IfKindResult::Matched(entry.insert(value))
+                } else {
+                    IfKindResult::NotMatched
+                }
+            }
+            Vacant(entry) => {
+                entry.insert(value);
+                IfKindResult::NotSet
+            }
+        }
     }
 
     pub fn rename(&mut self, key: &str, new_key: &str) -> bool {
@@ -51,13 +68,42 @@ impl Store {
             .collect_vec()
     }
 
+    pub fn kind(&self, key: &str) -> Option<Kind> {
+        self.values.get(key).map(|value| value.kind())
+    }
+
     pub fn get(&self, key: &str) -> Option<&Value> {
         self.values.get(key)
+    }
+
+    pub fn get_if_kind(&self, kind: Kind, key: &str) -> IfKindResult<&Value> {
+        if let Some(value) = self.values.get(key) {
+            if value.kind() == kind {
+                IfKindResult::Matched(value)
+            } else {
+                IfKindResult::NotMatched
+            }
+        } else {
+            IfKindResult::NotSet
+        }
     }
 
     pub fn get_and_remove(&mut self, key: &str) -> Option<Value> {
         self.expirations.remove(key);
         self.values.remove(key)
+    }
+
+    pub fn get_and_remove_if_kind(&mut self, kind: Kind, key: &str) -> IfKindResult<Value> {
+        match self.values.entry(key.to_string()) {
+            Occupied(entry) => {
+                if entry.get().kind() == kind {
+                    IfKindResult::Matched(entry.remove())
+                } else {
+                    IfKindResult::NotMatched
+                }
+            }
+            Vacant(_) => IfKindResult::NotSet,
+        }
     }
 
     pub fn copy(&mut self, source: &str, destination: &str) -> bool {
@@ -97,4 +143,10 @@ impl Store {
             }
         }
     }
+}
+
+pub enum IfKindResult<T> {
+    NotSet,
+    NotMatched,
+    Matched(T),
 }

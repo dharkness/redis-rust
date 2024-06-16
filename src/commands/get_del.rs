@@ -12,13 +12,10 @@ impl GetDel {
 
 impl Apply for GetDel {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
-        if let Some(value) = store.get_and_remove(&self.key) {
-            match value {
-                Value::String(s) => client.write_bulk_string(&s, registry),
-                _ => client.write_simple_error(WRONG_TYPE, registry),
-            }
-        } else {
-            client.write_null(registry)
+        match store.get_and_remove_if_kind(Kind::String, &self.key) {
+            IfKindResult::Matched(Value::String(s)) => client.write_bulk_string(&s, registry),
+            IfKindResult::NotSet => client.write_null(registry),
+            _ => client.write_simple_error(WRONG_TYPE, registry),
         }
     }
 }

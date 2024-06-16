@@ -37,7 +37,11 @@ impl Apply for Set {
         }
 
         let previous = if self.get {
-            store.get(&self.key).map(|Value::String(s)| s.clone())
+            match store.get_if_kind(Kind::String, &self.key) {
+                IfKindResult::Matched(Value::String(s)) => Some(s.clone()),
+                IfKindResult::NotSet => None,
+                _ => return client.write_simple_error(WRONG_TYPE, registry),
+            }
         } else {
             None
         };

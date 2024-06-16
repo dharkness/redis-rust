@@ -11,7 +11,7 @@ mod prelude {
     pub use crate::errors::*;
     pub use crate::network::Client;
     pub use crate::parse::{Apply, Expiration, Input, Options, parse_options, TryParse};
-    pub use crate::storage::{Pattern, SetIfResult, Store, Value};
+    pub use crate::storage::{IfKindResult, Kind, Pattern, Store, Value};
 }
 
 mod append;

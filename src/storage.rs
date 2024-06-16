@@ -1,5 +1,5 @@
 pub use pattern::Pattern;
-pub use store::Store;
+pub use store::{IfKindResult, Store};
 pub use value::{Kind, Value};
 
 mod pattern;

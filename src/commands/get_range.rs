@@ -16,42 +16,39 @@ impl GetRange {
 
 impl Apply for GetRange {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
-        if let Some(value) = store.get(&self.key) {
-            match value {
-                Value::String(s) => {
-                    let len = s.len() as i64;
-                    let mut start = if self.start < 0 {
-                        len + self.start
-                    } else {
-                        self.start
-                    };
-                    let mut end = 1 + if self.end < 0 {
-                        len + self.end
-                    } else {
-                        self.end
-                    };
+        match store.get_if_kind(Kind::String, &self.key) {
+            IfKindResult::Matched(Value::String(s)) => {
+                let len = s.len() as i64;
+                let mut start = if self.start < 0 {
+                    len + self.start
+                } else {
+                    self.start
+                };
+                let mut end = 1 + if self.end < 0 {
+                    len + self.end
+                } else {
+                    self.end
+                };
 
-                    if start < 0 {
-                        start = 0;
-                    } else if start > len {
-                        start = len;
-                    }
-                    if end < 0 {
-                        end = 0;
-                    } else if end > len {
-                        end = len;
-                    }
-
-                    if end > start {
-                        client.write_bulk_string(&s[start as usize..end as usize], registry)
-                    } else {
-                        client.write(EMPTY, registry)
-                    }
+                if start < 0 {
+                    start = 0;
+                } else if start > len {
+                    start = len;
                 }
-                _ => client.write_simple_error(WRONG_TYPE, registry),
+                if end < 0 {
+                    end = 0;
+                } else if end > len {
+                    end = len;
+                }
+
+                if end > start {
+                    client.write_bulk_string(&s[start as usize..end as usize], registry)
+                } else {
+                    client.write(EMPTY, registry)
+                }
             }
-        } else {
-            client.write(EMPTY, registry)
+            IfKindResult::NotSet => client.write_null(registry),
+            _ => client.write_simple_error(WRONG_TYPE, registry),
         }
     }
 }
