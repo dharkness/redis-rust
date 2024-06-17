@@ -1,4 +1,4 @@
-use crate::storage::{union, Union};
+use crate::storage::{SetOp, union};
 
 use super::prelude::*;
 
@@ -15,10 +15,10 @@ impl SetUnion {
 impl Apply for SetUnion {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         match union(store, &self.keys, usize::MAX) {
-            Union::Set(members) => client.write_set(&members, registry),
-            Union::SetRef(members) => client.write_set(members, registry),
-            Union::Empty => client.write_empty_set(registry),
-            Union::WrongType => client.write_simple_error(WRONG_TYPE, registry),
+            SetOp::Set(members) => client.write_set(&members, registry),
+            SetOp::SetRef(members) => client.write_set(members, registry),
+            SetOp::Empty => client.write_empty_set(registry),
+            SetOp::WrongType => client.write_simple_error(WRONG_TYPE, registry),
         }
     }
 }

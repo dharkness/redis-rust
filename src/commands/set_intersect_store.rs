@@ -1,4 +1,4 @@
-use crate::storage::{intersect, Intersect};
+use crate::storage::{intersect, SetOp};
 
 use super::prelude::*;
 
@@ -16,10 +16,10 @@ impl SetIntersectStore {
 impl Apply for SetIntersectStore {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         let intersection = match intersect(store, &self.from, usize::MAX) {
-            Intersect::Set(members) => members,
-            Intersect::SetRef(members) => members.clone(),
-            Intersect::Empty => return client.write_empty_set(registry),
-            Intersect::WrongType => return client.write_simple_error(WRONG_TYPE, registry),
+            SetOp::Set(members) => members,
+            SetOp::SetRef(members) => members.clone(),
+            SetOp::Empty => return client.write_empty_set(registry),
+            SetOp::WrongType => return client.write_simple_error(WRONG_TYPE, registry),
         };
         let len = intersection.len() as i64;
 

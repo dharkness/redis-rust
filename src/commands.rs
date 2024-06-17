@@ -37,6 +37,8 @@ mod rename;
 mod set;
 mod set_add;
 mod set_card;
+mod set_diff;
+mod set_diff_store;
 mod set_intersect;
 mod set_intersect_card;
 mod set_intersect_store;
@@ -53,7 +55,7 @@ mod str_len;
 mod ttl;
 mod r#type;
 
-fn get_commands() -> [(&'static str, Box<dyn TryParse>); 38] {
+fn get_commands() -> [(&'static str, Box<dyn TryParse>); 40] {
     [
         ("APPEND", Box::new(append::AppendParser::new())),
         ("COMMAND", Box::new(command::CommandParser::new())),
@@ -85,7 +87,11 @@ fn get_commands() -> [(&'static str, Box<dyn TryParse>); 38] {
         ("RENAME", Box::new(rename::RenameParser::new())),
         ("SADD", Box::new(set_add::SetAddParser::new())),
         ("SCARD", Box::new(set_card::SetCardParser::new())),
-        ("SMOVE", Box::new(set_move::SetMoveParser::new())),
+        ("SDIFF", Box::new(set_diff::SetDiffParser::new())),
+        (
+            "SDIFFSTORE",
+            Box::new(set_diff_store::SetDiffStoreParser::new()),
+        ),
         ("SET", Box::new(set::SetParser::new())),
         ("SINTER", Box::new(set_intersect::SetIntersectParser::new())),
         (
@@ -105,6 +111,7 @@ fn get_commands() -> [(&'static str, Box<dyn TryParse>); 38] {
             "SMISMEMBER",
             Box::new(set_is_member_multiple::SetIsMemberMultipleParser::new()),
         ),
+        ("SMOVE", Box::new(set_move::SetMoveParser::new())),
         ("SREM", Box::new(set_remove::SetRemoveParser::new())),
         ("STRLEN", Box::new(str_len::StrLenParser::new())),
         ("TTL", Box::new(ttl::TimeToLiveParser::new())),

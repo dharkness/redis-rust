@@ -1,49 +1,49 @@
-use crate::storage::{SetOp, union};
+use crate::storage::{diff, SetOp};
 
 use super::prelude::*;
 
-struct SetUnionStore {
+struct SetDiffStore {
     from: Vec<String>,
     to: String,
 }
 
-impl SetUnionStore {
+impl SetDiffStore {
     pub fn new(from: Vec<String>, to: String) -> Self {
         Self { from, to }
     }
 }
 
-impl Apply for SetUnionStore {
+impl Apply for SetDiffStore {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
-        let union = match union(store, &self.from, usize::MAX) {
+        let diff = match diff(store, &self.from, usize::MAX) {
             SetOp::Set(members) => members,
             SetOp::SetRef(members) => members.clone(),
             SetOp::Empty => return client.write_empty_set(registry),
             SetOp::WrongType => return client.write_simple_error(WRONG_TYPE, registry),
         };
-        let len = union.len() as i64;
+        let len = diff.len() as i64;
 
-        store.set(&self.to, Value::new_set(union));
+        store.set(&self.to, Value::new_set(diff));
         client.write_integer(len, registry)
     }
 }
 
-pub struct SetUnionStoreParser {}
+pub struct SetDiffStoreParser {}
 
-impl SetUnionStoreParser {
+impl SetDiffStoreParser {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl TryParse for SetUnionStoreParser {
+impl TryParse for SetDiffStoreParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
         let to = input.next_string()?;
 
         if input.has_next() {
-            Ok(Box::new(SetUnionStore::new(input.rest()?, to)))
+            Ok(Box::new(SetDiffStore::new(input.rest()?, to)))
         } else {
-            Err("Missing SUNIONSTORE keys".to_string())
+            Err("Missing SDIFFSTORE keys".to_string())
         }
     }
 }

@@ -1,4 +1,4 @@
-use crate::storage::{intersect, Intersect};
+use crate::storage::{intersect, SetOp};
 
 use super::prelude::*;
 
@@ -19,16 +19,16 @@ impl SetIntersectCard {
 impl Apply for SetIntersectCard {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         let intersection = match intersect(store, &self.from, self.limit) {
-            Intersect::Set(members) => members,
-            Intersect::SetRef(members) => {
+            SetOp::Set(members) => members,
+            SetOp::SetRef(members) => {
                 if members.len() > self.limit {
                     members.iter().take(self.limit).cloned().collect()
                 } else {
                     members.clone()
                 }
             }
-            Intersect::Empty => return client.write_empty_set(registry),
-            Intersect::WrongType => return client.write_simple_error(WRONG_TYPE, registry),
+            SetOp::Empty => return client.write_empty_set(registry),
+            SetOp::WrongType => return client.write_simple_error(WRONG_TYPE, registry),
         };
         client.write_integer(intersection.len() as i64, registry)
     }

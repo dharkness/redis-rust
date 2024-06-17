@@ -4,32 +4,90 @@ use itertools::Itertools;
 
 use crate::storage::{IfKindResult, Kind, Store, Value};
 
-pub enum Intersect<'a> {
+pub enum SetOp<'a> {
     Set(HashSet<String>),
     SetRef(&'a HashSet<String>),
     Empty,
     WrongType,
 }
 
-pub fn intersect<'a>(store: &'a mut Store, keys: &Vec<String>, limit: usize) -> Intersect<'a> {
+pub enum SetOpCard {
+    Count(usize),
+    Empty,
+    WrongType,
+}
+
+pub fn diff<'a>(store: &'a mut Store, keys: &Vec<String>, limit: usize) -> SetOp<'a> {
     if keys.len() == 1 {
         return match store.get_if_kind(Kind::Set, &keys[0]) {
             IfKindResult::Matched(Value::Set(members)) => {
                 if members.len() > limit {
-                    Intersect::Set(members.iter().take(limit).cloned().collect())
+                    SetOp::Set(members.iter().take(limit).cloned().collect())
                 } else {
-                    Intersect::SetRef(members)
+                    SetOp::SetRef(members)
                 }
             }
-            IfKindResult::NotSet => Intersect::Empty,
-            _ => Intersect::WrongType,
+            IfKindResult::NotSet => SetOp::Empty,
+            _ => SetOp::WrongType,
+        };
+    }
+
+    match store.get_multi_if_kind(Kind::Set, keys) {
+        IfKindResult::Matched(values) => {
+            let mut diff = HashSet::new();
+            do_diff(values, limit, |member| {
+                diff.insert(member.to_string());
+                diff.len()
+            });
+
+            if diff.is_empty() {
+                SetOp::Empty
+            } else {
+                SetOp::Set(diff)
+            }
+        }
+        IfKindResult::NotSet => SetOp::Empty,
+        _ => SetOp::WrongType,
+    }
+}
+
+fn do_diff<Insert>(values: Vec<&Value>, limit: usize, mut insert: Insert)
+where
+    Insert: FnMut(&str) -> usize,
+{
+    let sets: Vec<&HashSet<String>> = values.iter().map(|set| set.expect_set()).collect();
+
+    'outer: for member in sets[0] {
+        for set in &sets[1..] {
+            if set.contains(member) {
+                continue 'outer;
+            }
+        }
+        if insert(member) == limit {
+            break;
+        }
+    }
+}
+
+pub fn intersect<'a>(store: &'a mut Store, keys: &Vec<String>, limit: usize) -> SetOp<'a> {
+    if keys.len() == 1 {
+        return match store.get_if_kind(Kind::Set, &keys[0]) {
+            IfKindResult::Matched(Value::Set(members)) => {
+                if members.len() > limit {
+                    SetOp::Set(members.iter().take(limit).cloned().collect())
+                } else {
+                    SetOp::SetRef(members)
+                }
+            }
+            IfKindResult::NotSet => SetOp::Empty,
+            _ => SetOp::WrongType,
         };
     }
 
     match store.get_multi_if_kind(Kind::Set, keys) {
         IfKindResult::Matched(values) => {
             if values.len() < keys.len() {
-                return Intersect::Empty;
+                return SetOp::Empty;
             }
 
             let mut intersection = HashSet::new();
@@ -39,37 +97,31 @@ pub fn intersect<'a>(store: &'a mut Store, keys: &Vec<String>, limit: usize) -> 
             });
 
             if intersection.is_empty() {
-                Intersect::Empty
+                SetOp::Empty
             } else {
-                Intersect::Set(intersection)
+                SetOp::Set(intersection)
             }
         }
-        IfKindResult::NotSet => Intersect::Empty,
-        _ => Intersect::WrongType,
+        IfKindResult::NotSet => SetOp::Empty,
+        _ => SetOp::WrongType,
     }
 }
 
-pub enum IntersectCard {
-    Count(usize),
-    Empty,
-    WrongType,
-}
-
-pub fn intersect_card(store: &mut Store, keys: &Vec<String>, limit: usize) -> IntersectCard {
+pub fn intersect_card(store: &mut Store, keys: &Vec<String>, limit: usize) -> SetOpCard {
     if keys.len() == 1 {
         return match store.get_if_kind(Kind::Set, &keys[0]) {
             IfKindResult::Matched(Value::Set(members)) => {
-                IntersectCard::Count(usize::min(members.len(), limit))
+                SetOpCard::Count(usize::min(members.len(), limit))
             }
-            IfKindResult::NotSet => IntersectCard::Empty,
-            _ => IntersectCard::WrongType,
+            IfKindResult::NotSet => SetOpCard::Empty,
+            _ => SetOpCard::WrongType,
         };
     }
 
     match store.get_multi_if_kind(Kind::Set, keys) {
         IfKindResult::Matched(values) => {
             if values.len() < keys.len() {
-                return IntersectCard::Empty;
+                return SetOpCard::Empty;
             }
 
             let mut count = 0;
@@ -79,13 +131,13 @@ pub fn intersect_card(store: &mut Store, keys: &Vec<String>, limit: usize) -> In
             });
 
             if count == 0 {
-                IntersectCard::Empty
+                SetOpCard::Empty
             } else {
-                IntersectCard::Count(count)
+                SetOpCard::Count(count)
             }
         }
-        IfKindResult::NotSet => IntersectCard::Empty,
-        _ => IntersectCard::WrongType,
+        IfKindResult::NotSet => SetOpCard::Empty,
+        _ => SetOpCard::WrongType,
     }
 }
 
@@ -111,25 +163,18 @@ where
     }
 }
 
-pub enum Union<'a> {
-    Set(HashSet<String>),
-    SetRef(&'a HashSet<String>),
-    Empty,
-    WrongType,
-}
-
-pub fn union<'a>(store: &'a mut Store, keys: &Vec<String>, limit: usize) -> Union<'a> {
+pub fn union<'a>(store: &'a mut Store, keys: &Vec<String>, limit: usize) -> SetOp<'a> {
     if keys.len() == 1 {
         return match store.get_if_kind(Kind::Set, &keys[0]) {
             IfKindResult::Matched(Value::Set(members)) => {
                 if members.len() > limit {
-                    Union::Set(members.iter().take(limit).cloned().collect())
+                    SetOp::Set(members.iter().take(limit).cloned().collect())
                 } else {
-                    Union::SetRef(members)
+                    SetOp::SetRef(members)
                 }
             }
-            IfKindResult::NotSet => Union::Empty,
-            _ => Union::WrongType,
+            IfKindResult::NotSet => SetOp::Empty,
+            _ => SetOp::WrongType,
         };
     }
 
@@ -141,13 +186,13 @@ pub fn union<'a>(store: &'a mut Store, keys: &Vec<String>, limit: usize) -> Unio
             });
 
             if union.is_empty() {
-                Union::Empty
+                SetOp::Empty
             } else {
-                Union::Set(union)
+                SetOp::Set(union)
             }
         }
-        IfKindResult::NotSet => Union::Empty,
-        _ => Union::WrongType,
+        IfKindResult::NotSet => SetOp::Empty,
+        _ => SetOp::WrongType,
     }
 }
 
