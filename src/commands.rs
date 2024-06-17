@@ -5,128 +5,122 @@ use crate::parse::TryParse;
 mod prelude {
     pub use std::io;
 
-    pub use chrono::Utc;
     pub use mio::Registry;
 
     pub use crate::errors::*;
     pub use crate::network::Client;
-    pub use crate::parse::{Apply, Expiration, Input, Options, parse_options, TryParse};
-    pub use crate::storage::{IfKindResult, Kind, Pattern, Store, Value};
+    pub use crate::parse::{Apply, Input, Options, parse_options, TryParse};
+    pub use crate::storage::{IfKindResult, Kind, Store, Value};
 }
 
-mod append;
-mod command;
-mod copy;
-mod del;
-mod echo;
-mod exists;
-mod expire;
-mod expire_at;
-mod expire_time;
-mod get;
-mod get_del;
-mod get_ex;
-mod get_range;
-mod keys;
-mod p_expire;
-mod p_expire_at;
-mod p_expire_time;
-mod p_ttl;
-mod persist;
-mod rename;
-mod set;
-mod set_add;
-mod set_card;
-mod set_diff;
-mod set_diff_store;
-mod set_intersect;
-mod set_intersect_card;
-mod set_intersect_store;
-mod set_is_member;
-mod set_is_member_multiple;
-mod set_members;
-mod set_move;
-mod set_multiple;
-mod set_multiple_if_not_set;
-mod set_pop;
-mod set_random_members;
-mod set_remove;
-mod set_union;
-mod set_union_store;
-mod str_len;
-mod ttl;
-mod r#type;
+mod common;
+mod server;
+mod sets;
+mod strings;
 
 fn get_commands() -> [(&'static str, Box<dyn TryParse>); 42] {
     [
-        ("APPEND", Box::new(append::AppendParser::new())),
-        ("COMMAND", Box::new(command::CommandParser::new())),
-        ("COPY", Box::new(copy::CopyParser::new())),
-        ("DEL", Box::new(del::DelParser::new())),
-        ("ECHO", Box::new(echo::EchoParser::new())),
-        ("EXISTS", Box::new(exists::ExistsParser::new())),
-        ("EXPIRE", Box::new(expire::ExpireParser::new())),
-        ("EXPIREAT", Box::new(expire_at::ExpireAtParser::new())),
-        ("EXPIRETIME", Box::new(expire_time::ExpireTimeParser::new())),
-        ("GET", Box::new(get::GetParser::new())),
-        ("GETDEL", Box::new(get_del::GetDelParser::new())),
-        ("GETEX", Box::new(get_ex::GetExParser::new())),
-        ("GETRANGE", Box::new(get_range::GetRangeParser::new())),
-        ("KEYS", Box::new(keys::KeysParser::new())),
-        ("MSET", Box::new(set_multiple::SetMultipleParser::new())),
+        //
+        // server
+        //
+        ("COMMAND", Box::new(server::command::CommandParser::new())),
+        ("ECHO", Box::new(server::echo::EchoParser::new())),
+        //
+        // common
+        //
+        ("COPY", Box::new(common::copy::CopyParser::new())),
+        ("DEL", Box::new(common::del::DelParser::new())),
+        ("EXISTS", Box::new(common::exists::ExistsParser::new())),
+        ("EXPIRE", Box::new(common::expire::ExpireParser::new())),
         (
-            "MSETNX",
-            Box::new(set_multiple_if_not_set::SetMultipleIfNotSetParser::new()),
+            "EXPIREAT",
+            Box::new(common::expire_at::ExpireAtParser::new()),
         ),
-        ("PERSIST", Box::new(persist::PersistParser::new())),
-        ("PEXPIRE", Box::new(p_expire::PExpireParser::new())),
-        ("PEXPIREAT", Box::new(p_expire_at::PExpireAtParser::new())),
+        (
+            "EXPIRETIME",
+            Box::new(common::expire_time::ExpireTimeParser::new()),
+        ),
+        ("KEYS", Box::new(common::keys::KeysParser::new())),
+        ("PERSIST", Box::new(common::persist::PersistParser::new())),
+        ("PEXPIRE", Box::new(common::p_expire::PExpireParser::new())),
+        (
+            "PEXPIREAT",
+            Box::new(common::p_expire_at::PExpireAtParser::new()),
+        ),
         (
             "PEXPIRETIME",
-            Box::new(p_expire_time::PExpireTimeParser::new()),
+            Box::new(common::p_expire_time::PExpireTimeParser::new()),
         ),
-        ("PTTL", Box::new(p_ttl::PTimeToLiveParser::new())),
-        ("RENAME", Box::new(rename::RenameParser::new())),
-        ("SADD", Box::new(set_add::SetAddParser::new())),
-        ("SCARD", Box::new(set_card::SetCardParser::new())),
-        ("SDIFF", Box::new(set_diff::SetDiffParser::new())),
+        ("PTTL", Box::new(common::p_ttl::PTimeToLiveParser::new())),
+        ("RENAME", Box::new(common::rename::RenameParser::new())),
+        ("TTL", Box::new(common::ttl::TimeToLiveParser::new())),
+        ("TYPE", Box::new(common::r#type::TypeParser::new())),
+        //
+        // strings
+        //
+        ("APPEND", Box::new(strings::append::AppendParser::new())),
+        ("GET", Box::new(strings::get::GetParser::new())),
+        ("GETDEL", Box::new(strings::get_del::GetDelParser::new())),
+        ("GETEX", Box::new(strings::get_ex::GetExParser::new())),
+        (
+            "GETRANGE",
+            Box::new(strings::get_range::GetRangeParser::new()),
+        ),
+        (
+            "MSET",
+            Box::new(strings::set_multiple::SetMultipleParser::new()),
+        ),
+        (
+            "MSETNX",
+            Box::new(strings::set_multiple_if_not_set::SetMultipleIfNotSetParser::new()),
+        ),
+        ("SET", Box::new(strings::set::SetParser::new())),
+        ("STRLEN", Box::new(strings::str_len::StrLenParser::new())),
+        //
+        // sets
+        //
+        ("SADD", Box::new(sets::set_add::SetAddParser::new())),
+        ("SCARD", Box::new(sets::set_card::SetCardParser::new())),
+        ("SDIFF", Box::new(sets::set_diff::SetDiffParser::new())),
         (
             "SDIFFSTORE",
-            Box::new(set_diff_store::SetDiffStoreParser::new()),
+            Box::new(sets::set_diff_store::SetDiffStoreParser::new()),
         ),
-        ("SET", Box::new(set::SetParser::new())),
-        ("SINTER", Box::new(set_intersect::SetIntersectParser::new())),
+        (
+            "SINTER",
+            Box::new(sets::set_intersect::SetIntersectParser::new()),
+        ),
         (
             "SINTERCARD",
-            Box::new(set_intersect_card::SetIntersectCardParser::new()),
+            Box::new(sets::set_intersect_card::SetIntersectCardParser::new()),
         ),
         (
             "SINTERSTORE",
-            Box::new(set_intersect_store::SetIntersectStoreParser::new()),
+            Box::new(sets::set_intersect_store::SetIntersectStoreParser::new()),
         ),
         (
             "SISMEMBER",
-            Box::new(set_is_member::SetIsMemberParser::new()),
+            Box::new(sets::set_is_member::SetIsMemberParser::new()),
         ),
-        ("SMEMBERS", Box::new(set_members::SetMembersParser::new())),
+        (
+            "SMEMBERS",
+            Box::new(sets::set_members::SetMembersParser::new()),
+        ),
         (
             "SMISMEMBER",
-            Box::new(set_is_member_multiple::SetIsMemberMultipleParser::new()),
+            Box::new(sets::set_is_member_multiple::SetIsMemberMultipleParser::new()),
         ),
-        ("SMOVE", Box::new(set_move::SetMoveParser::new())),
-        ("SPOP", Box::new(set_pop::SetPopParser::new())),
+        ("SMOVE", Box::new(sets::set_move::SetMoveParser::new())),
+        ("SPOP", Box::new(sets::set_pop::SetPopParser::new())),
         (
             "SRANDMEMBER",
-            Box::new(set_random_members::SetRandomMembersParser::new()),
+            Box::new(sets::set_random_members::SetRandomMembersParser::new()),
         ),
-        ("SREM", Box::new(set_remove::SetRemoveParser::new())),
-        ("STRLEN", Box::new(str_len::StrLenParser::new())),
-        ("TTL", Box::new(ttl::TimeToLiveParser::new())),
-        ("TYPE", Box::new(r#type::TypeParser::new())),
-        ("SUNION", Box::new(set_union::SetUnionParser::new())),
+        ("SREM", Box::new(sets::set_remove::SetRemoveParser::new())),
+        ("SUNION", Box::new(sets::set_union::SetUnionParser::new())),
         (
             "SUNIONSTORE",
-            Box::new(set_union_store::SetUnionStoreParser::new()),
+            Box::new(sets::set_union_store::SetUnionStoreParser::new()),
         ),
     ]
 }
