@@ -51,20 +51,20 @@ impl Store {
         }
     }
 
-    pub fn remove(&mut self, key: &str) -> bool {
+    pub fn remove(&mut self, key: &str) -> Option<Value> {
         self.expirations.remove(key);
-        self.values.remove(key).is_some()
+        self.values.remove(key)
     }
 
     pub fn contains_key(&self, key: &str) -> bool {
         self.values.contains_key(key)
     }
 
-    pub fn keys(&self, pattern: &Pattern) -> Vec<&str> {
+    pub fn keys(&self, pattern: &Pattern) -> Vec<String> {
         self.values
             .keys()
             .filter(|key| pattern.matches(key))
-            .map(|key| key.as_str())
+            .cloned()
             .collect_vec()
     }
 

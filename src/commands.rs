@@ -48,6 +48,8 @@ mod set_members;
 mod set_move;
 mod set_multiple;
 mod set_multiple_if_not_set;
+mod set_pop;
+mod set_random_members;
 mod set_remove;
 mod set_union;
 mod set_union_store;
@@ -55,7 +57,7 @@ mod str_len;
 mod ttl;
 mod r#type;
 
-fn get_commands() -> [(&'static str, Box<dyn TryParse>); 40] {
+fn get_commands() -> [(&'static str, Box<dyn TryParse>); 42] {
     [
         ("APPEND", Box::new(append::AppendParser::new())),
         ("COMMAND", Box::new(command::CommandParser::new())),
@@ -112,6 +114,11 @@ fn get_commands() -> [(&'static str, Box<dyn TryParse>); 40] {
             Box::new(set_is_member_multiple::SetIsMemberMultipleParser::new()),
         ),
         ("SMOVE", Box::new(set_move::SetMoveParser::new())),
+        ("SPOP", Box::new(set_pop::SetPopParser::new())),
+        (
+            "SRANDMEMBER",
+            Box::new(set_random_members::SetRandomMembersParser::new()),
+        ),
         ("SREM", Box::new(set_remove::SetRemoveParser::new())),
         ("STRLEN", Box::new(str_len::StrLenParser::new())),
         ("TTL", Box::new(ttl::TimeToLiveParser::new())),

@@ -13,7 +13,10 @@ impl Del {
 impl Apply for Del {
     fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
         client.write_integer(
-            self.keys.iter().filter(|key| store.remove(key)).count() as i64,
+            self.keys
+                .iter()
+                .filter(|key| store.remove(key).is_some())
+                .count() as i64,
             registry,
         )
     }

@@ -165,7 +165,7 @@ impl Client {
         self.write(b":0\r\n", registry)
     }
 
-    pub fn write_array(&mut self, values: &[&str], registry: &Registry) -> io::Result<()> {
+    pub fn write_array(&mut self, values: &[String], registry: &Registry) -> io::Result<()> {
         self.write_string(format!("*{}\r\n", values.len()), registry)?;
         for value in values {
             self.write_bulk_string(value, registry)?;

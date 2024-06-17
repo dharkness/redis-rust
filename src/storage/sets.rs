@@ -1,6 +1,8 @@
 use std::collections::HashSet;
 
 use itertools::Itertools;
+use rand::{Rng, thread_rng};
+use rand::seq::SliceRandom;
 
 use crate::storage::{IfKindResult, Kind, Store, Value};
 
@@ -19,17 +21,7 @@ pub enum SetOpCard {
 
 pub fn diff<'a>(store: &'a mut Store, keys: &Vec<String>, limit: usize) -> SetOp<'a> {
     if keys.len() == 1 {
-        return match store.get_if_kind(Kind::Set, &keys[0]) {
-            IfKindResult::Matched(Value::Set(members)) => {
-                if members.len() > limit {
-                    SetOp::Set(members.iter().take(limit).cloned().collect())
-                } else {
-                    SetOp::SetRef(members)
-                }
-            }
-            IfKindResult::NotSet => SetOp::Empty,
-            _ => SetOp::WrongType,
-        };
+        return trim_to_limit(store, &keys[0], limit);
     }
 
     match store.get_multi_if_kind(Kind::Set, keys) {
@@ -71,17 +63,7 @@ where
 
 pub fn intersect<'a>(store: &'a mut Store, keys: &Vec<String>, limit: usize) -> SetOp<'a> {
     if keys.len() == 1 {
-        return match store.get_if_kind(Kind::Set, &keys[0]) {
-            IfKindResult::Matched(Value::Set(members)) => {
-                if members.len() > limit {
-                    SetOp::Set(members.iter().take(limit).cloned().collect())
-                } else {
-                    SetOp::SetRef(members)
-                }
-            }
-            IfKindResult::NotSet => SetOp::Empty,
-            _ => SetOp::WrongType,
-        };
+        return trim_to_limit(store, &keys[0], limit);
     }
 
     match store.get_multi_if_kind(Kind::Set, keys) {
@@ -165,17 +147,7 @@ where
 
 pub fn union<'a>(store: &'a mut Store, keys: &Vec<String>, limit: usize) -> SetOp<'a> {
     if keys.len() == 1 {
-        return match store.get_if_kind(Kind::Set, &keys[0]) {
-            IfKindResult::Matched(Value::Set(members)) => {
-                if members.len() > limit {
-                    SetOp::Set(members.iter().take(limit).cloned().collect())
-                } else {
-                    SetOp::SetRef(members)
-                }
-            }
-            IfKindResult::NotSet => SetOp::Empty,
-            _ => SetOp::WrongType,
-        };
+        return trim_to_limit(store, &keys[0], limit);
     }
 
     match store.get_multi_if_kind(Kind::Set, keys) {
@@ -207,5 +179,114 @@ where
                 return;
             }
         }
+    }
+}
+
+fn trim_to_limit<'a>(store: &'a Store, key: &str, limit: usize) -> SetOp<'a> {
+    return match store.get_if_kind(Kind::Set, key) {
+        IfKindResult::Matched(Value::Set(members)) => {
+            if members.len() > limit {
+                SetOp::Set(members.iter().take(limit).cloned().collect())
+            } else {
+                SetOp::SetRef(members)
+            }
+        }
+        IfKindResult::NotSet => SetOp::Empty,
+        _ => SetOp::WrongType,
+    };
+}
+
+pub enum Random {
+    Single(String),
+    Elements(Vec<String>),
+    Empty,
+    NotSet,
+    WrongType,
+}
+
+pub fn random_members(store: &mut Store, key: &str, count: usize, dupes: bool) -> Random {
+    if count == 0 {
+        return Random::Empty;
+    }
+
+    match store.get_mut_if_kind(Kind::Set, key) {
+        IfKindResult::Matched(Value::Set(ref mut members)) => {
+            let mut rng = thread_rng();
+
+            if count == 1 {
+                let member = members
+                    .iter()
+                    .nth(rng.gen_range(0..members.len()))
+                    .unwrap()
+                    .clone();
+
+                return Random::Single(member);
+            }
+
+            let mut pool = members.iter().collect_vec();
+            let chosen = if dupes {
+                let mut chosen = Vec::with_capacity(count);
+                for _ in 0..count {
+                    chosen.push(pool[rng.gen_range(0..pool.len())].clone());
+                }
+                chosen
+            } else {
+                pool.shuffle(&mut rng);
+                pool.into_iter().take(count).cloned().collect_vec()
+            };
+
+            Random::Elements(chosen)
+        }
+        IfKindResult::NotSet => Random::NotSet,
+        _ => Random::WrongType,
+    }
+}
+
+pub fn pop_random_members(store: &mut Store, key: &str, count: usize) -> Random {
+    if count == 0 {
+        return Random::Empty;
+    }
+
+    match store.get_mut_if_kind(Kind::Set, key) {
+        IfKindResult::Matched(Value::Set(ref mut members)) => {
+            let mut rng = thread_rng();
+
+            if count == 1 {
+                let member = if members.len() == 1 {
+                    let member = members.iter().next().expect("non-empty set").clone();
+                    store.remove(key);
+                    member
+                } else {
+                    let member = members
+                        .iter()
+                        .nth(rng.gen_range(0..members.len()))
+                        .unwrap()
+                        .clone();
+                    members.remove(&member);
+                    member
+                };
+
+                return Random::Single(member);
+            }
+
+            let chosen = if members.len() <= count {
+                let mut chosen = members.iter().cloned().collect_vec();
+                store.remove(key);
+                chosen.shuffle(&mut rng);
+                chosen
+            } else {
+                let mut pool = members.iter().cloned().collect_vec();
+                pool.shuffle(&mut rng);
+                let chosen = pool.into_iter().take(count).collect_vec();
+                for member in &chosen {
+                    members.remove(member);
+                }
+                chosen
+            };
+
+            Random::Elements(chosen)
+        }
+        IfKindResult::NotSet => Random::NotSet,
+        _ => Random::WrongType,
     }
 }
