@@ -37,6 +37,9 @@ mod rename;
 mod set;
 mod set_add;
 mod set_card;
+mod set_intersect;
+mod set_intersect_card;
+mod set_intersect_store;
 mod set_is_member;
 mod set_is_member_multiple;
 mod set_members;
@@ -48,7 +51,7 @@ mod str_len;
 mod ttl;
 mod r#type;
 
-fn get_commands() -> [(&'static str, Box<dyn TryParse>); 33] {
+fn get_commands() -> [(&'static str, Box<dyn TryParse>); 36] {
     [
         ("APPEND", Box::new(append::AppendParser::new())),
         ("COMMAND", Box::new(command::CommandParser::new())),
@@ -82,6 +85,15 @@ fn get_commands() -> [(&'static str, Box<dyn TryParse>); 33] {
         ("SCARD", Box::new(set_card::SetCardParser::new())),
         ("SMOVE", Box::new(set_move::SetMoveParser::new())),
         ("SET", Box::new(set::SetParser::new())),
+        ("SINTER", Box::new(set_intersect::SetIntersectParser::new())),
+        (
+            "SINTERCARD",
+            Box::new(set_intersect_card::SetIntersectCardParser::new()),
+        ),
+        (
+            "SINTERSTORE",
+            Box::new(set_intersect_store::SetIntersectStoreParser::new()),
+        ),
         (
             "SISMEMBER",
             Box::new(set_is_member::SetIsMemberParser::new()),

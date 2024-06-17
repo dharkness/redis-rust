@@ -1,4 +1,4 @@
-use super::parser::parse_integer;
+use super::parser::{parse_i64, parse_u64};
 
 pub struct Input<'a> {
     tokens: Vec<&'a str>,
@@ -31,12 +31,46 @@ impl<'a> Input<'a> {
         Ok(self.next()?.to_string())
     }
 
+    pub fn next_strings(&mut self, count: usize) -> Result<Vec<String>, String> {
+        if self.len() < count {
+            return Err("Invalid arguments specified for command".to_string());
+        }
+        let strings = self.tokens[self.index..self.index + count]
+            .iter()
+            .map(|&s| s.to_string())
+            .collect();
+        self.index += count;
+        Ok(strings)
+    }
+
     pub fn next_token(&mut self) -> Result<String, String> {
         Ok(self.next()?.to_uppercase())
     }
 
-    pub fn next_int(&mut self) -> Result<i64, String> {
-        parse_integer(self.next()?.as_bytes())
+    pub fn next_i64(&mut self) -> Result<i64, String> {
+        parse_i64(self.next()?.as_bytes())
+    }
+
+    pub fn next_u64(&mut self) -> Result<u64, String> {
+        parse_u64(self.next()?.as_bytes())
+    }
+
+    pub fn next_u64_min(&mut self, min: u64) -> Result<u64, String> {
+        let value = parse_u64(self.next()?.as_bytes())?;
+        if value >= min {
+            Ok(value)
+        } else {
+            Err("Invalid arguments specified for command".to_string())
+        }
+    }
+
+    pub fn next_count(&mut self) -> Result<usize, String> {
+        let count = self.next_u64()?;
+        if count > 0 {
+            Ok(count as usize)
+        } else {
+            Err("Invalid arguments specified for command".to_string())
+        }
     }
 
     pub fn rest(&mut self) -> Result<Vec<String>, String> {

@@ -29,7 +29,11 @@ impl Value {
         Value::String(s)
     }
 
-    pub fn new_set(members: &[String]) -> Self {
+    pub fn new_set(members: HashSet<String>) -> Self {
+        Value::Set(members)
+    }
+
+    pub fn new_set_from_list(members: &[String]) -> Self {
         Value::Set(members.iter().cloned().collect())
     }
 

@@ -24,7 +24,7 @@ impl Apply for SetAdd {
                 client.write_integer(added, registry)
             }
             IfKindResult::NotSet => {
-                store.set(&self.key, Value::new_set(&self.values));
+                store.set(&self.key, Value::new_set_from_list(&self.values));
                 client.write_integer(self.values.len() as i64, registry)
             }
             _ => client.write_simple_error(WRONG_TYPE, registry),

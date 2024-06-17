@@ -70,17 +70,13 @@ impl ExpireParser {
 impl TryParse for ExpireParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
         let key = input.next_string()?;
-        let seconds = input.next_int()?;
-
-        if seconds <= 0 {
-            return Err("invalid EXPIRE seconds".to_string());
-        }
+        let seconds = input.next_u64()?;
 
         Ok(Box::new(parse_options(
             "EXPIRE",
             &self.options,
             input,
-            Expire::new(key, Utc::now() + Duration::new(seconds as u64, 0)),
+            Expire::new(key, Utc::now() + Duration::new(seconds, 0)),
         )?))
     }
 }

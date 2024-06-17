@@ -32,7 +32,7 @@ impl Parser {
         }
 
         if let Some(end) = find_cr_lf(buffer) {
-            let len = parse_integer(&buffer[1..end])?;
+            let len = parse_i64(&buffer[1..end])?;
             if len < 1 {
                 return Err("invalid command length".to_string());
             }
@@ -64,7 +64,7 @@ impl Parser {
         }
 
         if let Some(end) = find_cr_lf(buffer) {
-            let len = parse_integer(&buffer[1..end])?;
+            let len = parse_i64(&buffer[1..end])?;
             if len < 0 {
                 return Err("invalid bulk string length".to_string());
             }
@@ -110,7 +110,7 @@ fn find_cr_lf(buffer: &[u8]) -> Option<usize> {
     None
 }
 
-pub fn parse_integer(buffer: &[u8]) -> Result<i64, String> {
+pub fn parse_i64(buffer: &[u8]) -> Result<i64, String> {
     let mut result: i64 = 0;
     let mut negative = false;
 
@@ -120,14 +120,27 @@ pub fn parse_integer(buffer: &[u8]) -> Result<i64, String> {
             continue;
         }
         if byte.is_ascii_digit() {
-            let digit = (byte - b'0') as i64;
-            result = result * 10 + digit;
+            result = result * 10 + (byte - b'0') as i64;
         } else {
             return Err("invalid integer character".to_string());
         }
     }
 
     Ok(if negative { -result } else { result })
+}
+
+pub fn parse_u64(buffer: &[u8]) -> Result<u64, String> {
+    let mut result: u64 = 0;
+
+    for byte in buffer.iter() {
+        if byte.is_ascii_digit() {
+            result = result * 10 + (byte - b'0') as u64;
+        } else {
+            return Err("invalid unsigned integer character".to_string());
+        }
+    }
+
+    Ok(result)
 }
 
 pub trait Apply {

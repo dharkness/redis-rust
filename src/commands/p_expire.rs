@@ -22,7 +22,7 @@ impl PExpireParser {
 impl TryParse for PExpireParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
         let key = input.next_string()?;
-        let milliseconds = input.next_int()?;
+        let milliseconds = input.next_u64()?;
 
         if milliseconds <= 0 {
             return Err("invalid PEXPIRE milliseconds".to_string());
@@ -37,7 +37,7 @@ impl TryParse for PExpireParser {
                 Utc::now()
                     + if milliseconds > 1_000 {
                         Duration::new(
-                            milliseconds as u64 / 1_000,
+                            milliseconds / 1_000,
                             (milliseconds % 1_000) as u32 * 1_000_000,
                         )
                     } else {

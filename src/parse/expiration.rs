@@ -16,9 +16,9 @@ impl Expiration {
             return Ok(Expiration::Keep);
         }
 
-        let time = input.next_int()?;
+        let time = input.next_i64()?;
         if time <= 0 {
-            return Err("invalid SET time".to_string());
+            return Err("invalid expire time".to_string());
         }
 
         let at = match token {
@@ -33,11 +33,11 @@ impl Expiration {
             }
             "EXAT" => match DateTime::from_timestamp_millis(time * 1_000) {
                 Some(at) => at,
-                _ => return Err("invalid SET unix time seconds".to_string()),
+                _ => return Err("invalid expire unix time seconds".to_string()),
             },
             "PXAT" => match DateTime::from_timestamp_millis(time) {
                 Some(at) => at,
-                _ => return Err("invalid SET unix time milliseconds".to_string()),
+                _ => return Err("invalid expire unix time milliseconds".to_string()),
             },
             _ => return Err("invalid expiration code".to_string()),
         };

@@ -22,7 +22,7 @@ impl PExpireAtParser {
 impl TryParse for PExpireAtParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
         let key = input.next_string()?;
-        let unix_time_milliseconds = input.next_int()?;
+        let unix_time_milliseconds = input.next_i64()?;
 
         Ok(Box::new(parse_options(
             "PEXPIREAT",

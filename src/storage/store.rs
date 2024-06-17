@@ -122,6 +122,22 @@ impl Store {
         }
     }
 
+    pub fn get_multi_if_kind(&self, kind: Kind, keys: &Vec<String>) -> IfKindResult<Vec<&Value>> {
+        let mut values = Vec::with_capacity(keys.len());
+
+        for key in keys {
+            if let Some(value) = self.values.get(key) {
+                if value.kind() == kind {
+                    values.push(value);
+                } else {
+                    return IfKindResult::NotMatched;
+                }
+            }
+        }
+
+        IfKindResult::Matched(values)
+    }
+
     pub fn copy(&mut self, source: &str, destination: &str) -> bool {
         if let Some(value) = self.get(source) {
             self.values.insert(destination.to_string(), value.clone());
