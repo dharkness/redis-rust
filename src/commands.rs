@@ -47,11 +47,13 @@ mod set_move;
 mod set_multiple;
 mod set_multiple_if_not_set;
 mod set_remove;
+mod set_union;
+mod set_union_store;
 mod str_len;
 mod ttl;
 mod r#type;
 
-fn get_commands() -> [(&'static str, Box<dyn TryParse>); 36] {
+fn get_commands() -> [(&'static str, Box<dyn TryParse>); 38] {
     [
         ("APPEND", Box::new(append::AppendParser::new())),
         ("COMMAND", Box::new(command::CommandParser::new())),
@@ -107,6 +109,11 @@ fn get_commands() -> [(&'static str, Box<dyn TryParse>); 36] {
         ("STRLEN", Box::new(str_len::StrLenParser::new())),
         ("TTL", Box::new(ttl::TimeToLiveParser::new())),
         ("TYPE", Box::new(r#type::TypeParser::new())),
+        ("SUNION", Box::new(set_union::SetUnionParser::new())),
+        (
+            "SUNIONSTORE",
+            Box::new(set_union_store::SetUnionStoreParser::new()),
+        ),
     ]
 }
 

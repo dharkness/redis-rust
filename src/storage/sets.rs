@@ -99,14 +99,68 @@ where
         .sorted_by(|a, b| a.len().cmp(&b.len()))
         .collect();
 
-    'outer: for value in sets[0] {
+    'outer: for member in sets[0] {
         for set in &sets[1..] {
-            if !set.contains(value) {
+            if !set.contains(member) {
                 continue 'outer;
             }
         }
-        if insert(value) == limit {
+        if insert(member) == limit {
             break;
+        }
+    }
+}
+
+pub enum Union<'a> {
+    Set(HashSet<String>),
+    SetRef(&'a HashSet<String>),
+    Empty,
+    WrongType,
+}
+
+pub fn union<'a>(store: &'a mut Store, keys: &Vec<String>, limit: usize) -> Union<'a> {
+    if keys.len() == 1 {
+        return match store.get_if_kind(Kind::Set, &keys[0]) {
+            IfKindResult::Matched(Value::Set(members)) => {
+                if members.len() > limit {
+                    Union::Set(members.iter().take(limit).cloned().collect())
+                } else {
+                    Union::SetRef(members)
+                }
+            }
+            IfKindResult::NotSet => Union::Empty,
+            _ => Union::WrongType,
+        };
+    }
+
+    match store.get_multi_if_kind(Kind::Set, keys) {
+        IfKindResult::Matched(values) => {
+            let mut union = HashSet::new();
+            do_union(values, limit, |member| {
+                (union.insert(member.to_string()), union.len())
+            });
+
+            if union.is_empty() {
+                Union::Empty
+            } else {
+                Union::Set(union)
+            }
+        }
+        IfKindResult::NotSet => Union::Empty,
+        _ => Union::WrongType,
+    }
+}
+
+fn do_union<Insert>(values: Vec<&Value>, limit: usize, mut insert: Insert)
+where
+    Insert: FnMut(&str) -> (bool, usize),
+{
+    for set in values.iter().map(|value| value.expect_set()) {
+        for member in set {
+            let (inserted, count) = insert(member);
+            if inserted && count == limit {
+                return;
+            }
         }
     }
 }
