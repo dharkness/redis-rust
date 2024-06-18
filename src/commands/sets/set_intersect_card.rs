@@ -16,7 +16,7 @@ impl SetIntersectCard {
 }
 
 impl Apply for SetIntersectCard {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         let intersection = match intersect(store, &self.from, self.limit) {
             SetOp::Set(members) => members,
             SetOp::SetRef(members) => {
@@ -26,10 +26,10 @@ impl Apply for SetIntersectCard {
                     members.clone()
                 }
             }
-            SetOp::Empty => return client.write_empty_set(registry),
-            SetOp::WrongType => return client.write_simple_error(WRONG_TYPE, registry),
+            SetOp::Empty => return Ok(Response::EmptySet),
+            SetOp::WrongType => return Err(Error::WrongType),
         };
-        client.write_integer(intersection.len() as i64, registry)
+        Ok(Response::Usize(intersection.len()))
     }
 }
 
@@ -44,7 +44,7 @@ impl SetIntersectCardParser {
         }
     }
 
-    fn try_limit(set: &mut SetIntersectCard, _: &str, input: &mut Input) -> Result<(), String> {
+    fn try_limit(set: &mut SetIntersectCard, _: &str, input: &mut Input) -> Result<(), Error> {
         let limit = input.next_u64()? as usize;
         if limit > 0 {
             set.limit = limit;
@@ -54,9 +54,9 @@ impl SetIntersectCardParser {
 }
 
 impl TryParse for SetIntersectCardParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         let count = input.next_u64_min(1)? as usize;
-        let keys = input.next_strings(count)?;
+        let keys = input.next_strings("SINTERCARD", "key", count)?;
 
         Ok(Box::new(parse_options(
             "SINTERCARD",

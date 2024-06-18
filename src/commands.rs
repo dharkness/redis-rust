@@ -3,12 +3,7 @@ use std::collections::HashMap;
 use crate::parse::TryParse;
 
 mod prelude {
-    pub use std::io;
-
-    pub use mio::Registry;
-
-    pub use crate::errors::*;
-    pub use crate::network::Client;
+    pub use crate::network::*;
     pub use crate::parse::{Apply, Input, Options, parse_options, TryParse};
     pub use crate::storage::{IfKindResult, Kind, Store, Value};
 }

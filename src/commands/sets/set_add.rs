@@ -12,7 +12,7 @@ impl SetAdd {
 }
 
 impl Apply for SetAdd {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         match store.get_mut_if_kind(Kind::Set, &self.key) {
             IfKindResult::Matched(Value::Set(ref mut members)) => {
                 let mut added = 0;
@@ -21,13 +21,13 @@ impl Apply for SetAdd {
                         added += 1;
                     }
                 }
-                client.write_integer(added, registry)
+                Ok(Response::Usize(added))
             }
             IfKindResult::NotSet => {
-                store.set(&self.key, Value::new_set_from_list(&self.values));
-                client.write_integer(self.values.len() as i64, registry)
+                store.set(&self.key, Value::set_from_vec(&self.values));
+                Ok(Response::Usize(self.values.len()))
             }
-            _ => client.write_simple_error(WRONG_TYPE, registry),
+            _ => Err(Error::WrongType),
         }
     }
 }
@@ -41,7 +41,7 @@ impl SetAddParser {
 }
 
 impl TryParse for SetAddParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         Ok(Box::new(SetAdd::new(input.next_string()?, input.rest()?)))
     }
 }

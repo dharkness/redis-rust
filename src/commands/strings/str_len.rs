@@ -11,14 +11,14 @@ impl StrLen {
 }
 
 impl Apply for StrLen {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         if let Some(value) = store.get(&self.key) {
             match value {
-                Value::String(s) => client.write_integer(s.len() as i64, registry),
-                _ => client.write_simple_error(WRONG_TYPE, registry),
+                Value::String(s) => Ok(Response::Usize(s.len())),
+                _ => Err(Error::WrongType),
             }
         } else {
-            client.write_integer(0, registry)
+            Ok(Response::Zero)
         }
     }
 }
@@ -32,7 +32,7 @@ impl StrLenParser {
 }
 
 impl TryParse for StrLenParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         Ok(Box::new(StrLen::new(input.next_string()?)))
     }
 }

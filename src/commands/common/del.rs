@@ -11,14 +11,13 @@ impl Del {
 }
 
 impl Apply for Del {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
-        client.write_integer(
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+        Ok(Response::Usize(
             self.keys
                 .iter()
                 .filter(|key| store.remove(key).is_some())
-                .count() as i64,
-            registry,
-        )
+                .count(),
+        ))
     }
 }
 
@@ -31,7 +30,7 @@ impl DelParser {
 }
 
 impl TryParse for DelParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         Ok(Box::new(Del::new(input.rest()?)))
     }
 }

@@ -11,13 +11,8 @@ impl Echo {
 }
 
 impl Apply for Echo {
-    fn apply(
-        &self,
-        _store: &mut Store,
-        client: &mut Client,
-        registry: &Registry,
-    ) -> io::Result<()> {
-        client.write_bulk_string(&self.message, registry)
+    fn apply(&self, _store: &mut Store) -> Result<Response, Error> {
+        Ok(Response::BulkString(self.message.clone()))
     }
 }
 
@@ -30,7 +25,7 @@ impl EchoParser {
 }
 
 impl TryParse for EchoParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         Ok(Box::new(Echo::new(input.next_string()?)))
     }
 }

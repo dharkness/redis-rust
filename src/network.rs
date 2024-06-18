@@ -1,8 +1,19 @@
+use std::io;
+
 pub use client::Client;
-use errors::{interrupted, would_block};
+pub use error::Error;
+pub use response::*;
 pub use server::Server;
 
 mod client;
-mod errors;
+mod error;
+mod response;
 mod server;
 
+fn would_block(err: &io::Error) -> bool {
+    err.kind() == io::ErrorKind::WouldBlock
+}
+
+fn interrupted(err: &io::Error) -> bool {
+    err.kind() == io::ErrorKind::Interrupted
+}

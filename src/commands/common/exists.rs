@@ -11,14 +11,13 @@ impl Exists {
 }
 
 impl Apply for Exists {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
-        client.write_integer(
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+        Ok(Response::Usize(
             self.keys
                 .iter()
                 .filter(|key| store.contains_key(key))
-                .count() as i64,
-            registry,
-        )
+                .count(),
+        ))
     }
 }
 
@@ -31,7 +30,7 @@ impl ExistsParser {
 }
 
 impl TryParse for ExistsParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         Ok(Box::new(Exists::new(input.rest()?)))
     }
 }

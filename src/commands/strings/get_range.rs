@@ -13,7 +13,7 @@ impl GetRange {
 }
 
 impl Apply for GetRange {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         match store.get_if_kind(Kind::String, &self.key) {
             IfKindResult::Matched(Value::String(s)) => {
                 let len = s.len() as i64;
@@ -40,13 +40,15 @@ impl Apply for GetRange {
                 }
 
                 if end > start {
-                    client.write_bulk_string(&s[start as usize..end as usize], registry)
+                    Ok(Response::BulkString(
+                        s[start as usize..end as usize].to_string(),
+                    ))
                 } else {
-                    client.write_empty_bulk_string(registry)
+                    Ok(Response::EmptyBulkString)
                 }
             }
-            IfKindResult::NotSet => client.write_null(registry),
-            _ => client.write_simple_error(WRONG_TYPE, registry),
+            IfKindResult::NotSet => Ok(Response::Null),
+            _ => Err(Error::WrongType),
         }
     }
 }
@@ -60,17 +62,11 @@ impl GetRangeParser {
 }
 
 impl TryParse for GetRangeParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
-        let key = input.next_string()?;
-        let start = input
-            .next()?
-            .parse::<i64>()
-            .map_err(|_| "invalid start".to_string())?;
-        let end = input
-            .next()?
-            .parse::<i64>()
-            .map_err(|_| "invalid end".to_string())?;
-
-        Ok(Box::new(GetRange::new(key, start, end)))
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
+        Ok(Box::new(GetRange::new(
+            input.next_string()?,
+            input.next_i64()?,
+            input.next_i64()?,
+        )))
     }
 }

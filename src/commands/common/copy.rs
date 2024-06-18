@@ -17,13 +17,13 @@ impl Copy {
 }
 
 impl Apply for Copy {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         if (self.replace || !store.contains_key(&self.destination))
             && store.copy(&self.source, &self.destination)
         {
-            client.write_integer(1, registry)
+            Ok(Response::One)
         } else {
-            client.write_integer(0, registry)
+            Ok(Response::Zero)
         }
     }
 }
@@ -39,14 +39,14 @@ impl CopyParser {
         }
     }
 
-    fn try_replace(copy: &mut Copy, _: &str, _: &mut Input) -> Result<(), String> {
+    fn try_replace(copy: &mut Copy, _: &str, _: &mut Input) -> Result<(), Error> {
         copy.replace = true;
         Ok(())
     }
 }
 
 impl TryParse for CopyParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         let source = input.next_string()?;
         let destination = input.next_string()?;
 

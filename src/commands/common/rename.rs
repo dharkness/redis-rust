@@ -12,11 +12,11 @@ impl Rename {
 }
 
 impl Apply for Rename {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         if store.rename(&self.key, &self.new_key) {
-            client.write_ok(registry)
+            Ok(Response::Ok)
         } else {
-            client.write_simple_error("key does not exist", registry)
+            Err(Error::KeyNotFound)
         }
     }
 }
@@ -30,7 +30,7 @@ impl RenameParser {
 }
 
 impl TryParse for RenameParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         Ok(Box::new(Rename::new(
             input.next_string()?,
             input.next_string()?,

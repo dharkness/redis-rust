@@ -11,11 +11,11 @@ impl Persist {
 }
 
 impl Apply for Persist {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         if store.contains_key(&self.key) && store.persist(&self.key) {
-            client.write_integer(1, registry)
+            Ok(Response::One)
         } else {
-            client.write_integer(0, registry)
+            Ok(Response::Zero)
         }
     }
 }
@@ -29,7 +29,7 @@ impl PersistParser {
 }
 
 impl TryParse for PersistParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         Ok(Box::new(Persist::new(input.next_string()?)))
     }
 }

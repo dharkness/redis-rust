@@ -13,17 +13,17 @@ impl SetIntersectStore {
 }
 
 impl Apply for SetIntersectStore {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         let intersection = match intersect(store, &self.from, usize::MAX) {
             SetOp::Set(members) => members,
             SetOp::SetRef(members) => members.clone(),
-            SetOp::Empty => return client.write_empty_set(registry),
-            SetOp::WrongType => return client.write_simple_error(WRONG_TYPE, registry),
+            SetOp::Empty => return Ok(Response::EmptySet),
+            SetOp::WrongType => return Err(Error::WrongType),
         };
-        let len = intersection.len() as i64;
+        let len = intersection.len();
 
-        store.set(&self.to, Value::new_set(intersection));
-        client.write_integer(len, registry)
+        store.set(&self.to, Value::from(intersection));
+        Ok(Response::Usize(len))
     }
 }
 
@@ -36,13 +36,16 @@ impl SetIntersectStoreParser {
 }
 
 impl TryParse for SetIntersectStoreParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         let to = input.next_string()?;
 
         if input.has_next() {
             Ok(Box::new(SetIntersectStore::new(input.rest()?, to)))
         } else {
-            Err("Missing SINTERSTORE keys".to_string())
+            Err(Error::MissingArgument(
+                "SINTERSTORE".to_string(),
+                "source".to_string(),
+            ))
         }
     }
 }

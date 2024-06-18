@@ -11,11 +11,11 @@ impl Get {
 }
 
 impl Apply for Get {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         match store.get_if_kind(Kind::String, &self.key) {
-            IfKindResult::Matched(Value::String(s)) => client.write_bulk_string(s, registry),
-            IfKindResult::NotSet => client.write_null(registry),
-            _ => client.write_simple_error(WRONG_TYPE, registry),
+            IfKindResult::Matched(Value::String(s)) => Ok(Response::BulkString(s.clone())),
+            IfKindResult::NotSet => Ok(Response::Null),
+            _ => Err(Error::WrongType),
         }
     }
 }
@@ -29,7 +29,7 @@ impl GetParser {
 }
 
 impl TryParse for GetParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         Ok(Box::new(Get::new(input.next_string()?)))
     }
 }

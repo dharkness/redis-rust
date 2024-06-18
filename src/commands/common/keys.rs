@@ -12,11 +12,11 @@ impl Keys {
 }
 
 impl Apply for Keys {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         if let Ok(pattern) = Pattern::try_parse(&self.pattern) {
-            client.write_array(&store.keys(&pattern), registry)
+            Ok(Response::List(store.keys(&pattern)))
         } else {
-            client.write_empty_array(registry)
+            Ok(Response::EmptyList)
         }
     }
 }
@@ -30,7 +30,7 @@ impl KeysParser {
 }
 
 impl TryParse for KeysParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         Ok(Box::new(Keys::new(input.next_string()?)))
     }
 }

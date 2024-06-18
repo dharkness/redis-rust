@@ -12,17 +12,17 @@ impl Append {
 }
 
 impl Apply for Append {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         match store.get_mut_if_kind(Kind::String, &self.key) {
             IfKindResult::Matched(Value::String(ref mut s)) => {
                 s.push_str(&self.value);
-                client.write_integer(s.len() as i64, registry)
+                Ok(Response::Usize(s.len()))
             }
             IfKindResult::NotSet => {
-                store.set(&self.key, Value::new_string(self.value.clone()));
-                client.write_integer(self.value.len() as i64, registry)
+                store.set(&self.key, Value::from(self.value.clone()));
+                Ok(Response::Usize(self.value.len()))
             }
-            _ => client.write_simple_error(WRONG_TYPE, registry),
+            _ => Err(Error::WrongType),
         }
     }
 }
@@ -36,7 +36,7 @@ impl AppendParser {
 }
 
 impl TryParse for AppendParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         Ok(Box::new(Append::new(
             input.next_string()?,
             input.next_string()?,

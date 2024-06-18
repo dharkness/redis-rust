@@ -11,7 +11,6 @@ use std::io;
 use crate::network::Server;
 
 mod commands;
-mod errors;
 mod network;
 mod parse;
 mod resp;

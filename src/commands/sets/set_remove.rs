@@ -12,7 +12,7 @@ impl SetRemove {
 }
 
 impl Apply for SetRemove {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         match store.get_mut_if_kind(Kind::Set, &self.key) {
             IfKindResult::Matched(Value::Set(ref mut members)) => {
                 let mut removed = 0;
@@ -24,10 +24,10 @@ impl Apply for SetRemove {
                 if members.is_empty() {
                     store.remove(&self.key);
                 }
-                client.write_integer(removed, registry)
+                Ok(Response::Usize(removed))
             }
-            IfKindResult::NotSet => client.write_zero(registry),
-            _ => client.write_simple_error(WRONG_TYPE, registry),
+            IfKindResult::NotSet => Ok(Response::Zero),
+            _ => Err(Error::WrongType),
         }
     }
 }
@@ -41,7 +41,7 @@ impl SetRemoveParser {
 }
 
 impl TryParse for SetRemoveParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         Ok(Box::new(SetRemove::new(
             input.next_string()?,
             input.rest()?,

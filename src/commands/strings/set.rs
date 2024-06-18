@@ -24,16 +24,16 @@ impl Set {
 }
 
 impl Apply for Set {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         match self.when {
             When::Exists => {
                 if !store.contains_key(&self.key) {
-                    return client.write_null(registry);
+                    return Ok(Response::Null);
                 }
             }
             When::NotExists => {
                 if store.contains_key(&self.key) {
-                    return client.write_null(registry);
+                    return Ok(Response::Null);
                 }
             }
             When::Always => (),
@@ -43,7 +43,7 @@ impl Apply for Set {
             match store.get_if_kind(Kind::String, &self.key) {
                 IfKindResult::Matched(Value::String(s)) => Some(s.clone()),
                 IfKindResult::NotSet => None,
-                _ => return client.write_simple_error(WRONG_TYPE, registry),
+                _ => return Err(Error::WrongType),
             }
         } else {
             None
@@ -59,15 +59,16 @@ impl Apply for Set {
                     store.expire_at(&self.key, &at);
                 } else {
                     store.remove(&self.key);
-                    return client.write_ok(registry);
+                    return Ok(Response::Ok);
                 }
             }
         }
 
-        store.set(&self.key, Value::new_string(self.value.clone()));
+        store.set(&self.key, Value::from(self.value.clone()));
         match previous {
-            Some(s) => client.write_bulk_string(&s, registry),
-            None => client.write_null(registry),
+            Some(s) => Ok(Response::BulkString(s)),
+            None if self.get => Ok(Response::Null),
+            _ => Ok(Response::Ok),
         }
     }
 }
@@ -90,7 +91,7 @@ impl SetParser {
         }
     }
 
-    fn try_when(set: &mut Set, token: &str, _: &mut Input) -> Result<(), String> {
+    fn try_when(set: &mut Set, token: &str, _: &mut Input) -> Result<(), Error> {
         set.when = match token {
             "NX" => When::NotExists,
             "XX" => When::Exists,
@@ -99,19 +100,19 @@ impl SetParser {
         Ok(())
     }
 
-    fn try_get(set: &mut Set, _: &str, _: &mut Input) -> Result<(), String> {
+    fn try_get(set: &mut Set, _: &str, _: &mut Input) -> Result<(), Error> {
         set.get = true;
         Ok(())
     }
 
-    fn try_expire(set: &mut Set, token: &str, input: &mut Input) -> Result<(), String> {
+    fn try_expire(set: &mut Set, token: &str, input: &mut Input) -> Result<(), Error> {
         set.expire = Expiration::try_parse(token, input)?;
         Ok(())
     }
 }
 
 impl TryParse for SetParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         let key = input.next_string()?;
         let value = input.next_string()?;
 

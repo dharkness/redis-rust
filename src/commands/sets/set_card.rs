@@ -11,13 +11,11 @@ impl SetCard {
 }
 
 impl Apply for SetCard {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         match store.get_if_kind(Kind::Set, &self.key) {
-            IfKindResult::Matched(Value::Set(members)) => {
-                client.write_integer(members.len() as i64, registry)
-            }
-            IfKindResult::NotSet => client.write_zero(registry),
-            _ => client.write_simple_error(WRONG_TYPE, registry),
+            IfKindResult::Matched(Value::Set(members)) => Ok(Response::Usize(members.len())),
+            IfKindResult::NotSet => Ok(Response::Zero),
+            _ => Err(Error::WrongType),
         }
     }
 }
@@ -31,7 +29,7 @@ impl SetCardParser {
 }
 
 impl TryParse for SetCardParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         Ok(Box::new(SetCard::new(input.next_string()?)))
     }
 }

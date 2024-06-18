@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use crate::commands::prelude::*;
 
 struct SetIsMemberMultiple {
@@ -12,23 +14,24 @@ impl SetIsMemberMultiple {
 }
 
 impl Apply for SetIsMemberMultiple {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         match store.get_if_kind(Kind::Set, &self.key) {
-            IfKindResult::Matched(Value::Set(members)) => {
-                client.write_string(format!("~{}\r\n", self.values.len()), registry)?;
-                for member in &self.values {
-                    client.write_integer(if members.contains(member) { 1 } else { 0 }, registry)?;
-                }
-                Ok(())
-            }
+            IfKindResult::Matched(Value::Set(members)) => Ok(Response::ValueList(
+                self.values
+                    .iter()
+                    .map(|value| {
+                        if members.contains(value) {
+                            Value::from(1)
+                        } else {
+                            Value::from(0)
+                        }
+                    })
+                    .collect_vec(),
+            )),
             IfKindResult::NotSet => {
-                client.write_string(format!("~{}\r\n", self.values.len()), registry)?;
-                for _ in 0..self.values.len() {
-                    client.write_zero(registry)?;
-                }
-                Ok(())
+                Ok(Response::ValueList(vec![Value::from(0); self.values.len()]))
             }
-            _ => client.write_simple_error(WRONG_TYPE, registry),
+            _ => Err(Error::WrongType),
         }
     }
 }
@@ -42,7 +45,7 @@ impl SetIsMemberMultipleParser {
 }
 
 impl TryParse for SetIsMemberMultipleParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         Ok(Box::new(SetIsMemberMultiple::new(
             input.next_string()?,
             input.rest()?,

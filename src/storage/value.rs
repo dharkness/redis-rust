@@ -1,46 +1,43 @@
 use std::collections::HashSet;
 
-const SET: &str = "set";
-const STRING: &str = "string";
-
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Kind {
-    String,
+    List,
+    Integer,
     Set,
+    String,
 }
 
 impl Kind {
     pub fn as_str(&self) -> &'static str {
         match self {
-            Kind::String => STRING,
-            Kind::Set => SET,
+            Kind::List => "list",
+            Kind::Integer => "integer",
+            Kind::Set => "set",
+            Kind::String => "string",
         }
     }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Value {
-    String(String),
+    Integer(i64),
+    List(Vec<String>),
     Set(HashSet<String>),
+    String(String),
 }
 
 impl Value {
-    pub fn new_string(s: String) -> Self {
-        Value::String(s)
-    }
-
-    pub fn new_set(members: HashSet<String>) -> Self {
-        Value::Set(members)
-    }
-
-    pub fn new_set_from_list(members: &[String]) -> Self {
+    pub fn set_from_vec(members: &[String]) -> Self {
         Value::Set(members.iter().cloned().collect())
     }
 
     pub fn kind(&self) -> Kind {
         match self {
-            Value::String(_) => Kind::String,
+            Value::List(_) => Kind::List,
+            Value::Integer(_) => Kind::Integer,
             Value::Set(_) => Kind::Set,
+            Value::String(_) => Kind::String,
         }
     }
 
@@ -56,5 +53,35 @@ impl Value {
             Value::Set(members) => members,
             _ => panic!("expected set"),
         }
+    }
+}
+
+impl From<Vec<String>> for Value {
+    fn from(elements: Vec<String>) -> Self {
+        Value::List(elements)
+    }
+}
+
+impl From<usize> for Value {
+    fn from(n: usize) -> Self {
+        Value::Integer(n as i64)
+    }
+}
+
+impl From<HashSet<String>> for Value {
+    fn from(members: HashSet<String>) -> Self {
+        Value::Set(members)
+    }
+}
+
+impl From<String> for Value {
+    fn from(s: String) -> Self {
+        Value::String(s)
+    }
+}
+
+impl From<&str> for Value {
+    fn from(s: &str) -> Self {
+        Value::String(s.to_string())
     }
 }

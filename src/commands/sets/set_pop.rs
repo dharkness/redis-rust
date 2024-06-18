@@ -13,13 +13,13 @@ impl SetPop {
 }
 
 impl Apply for SetPop {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         match pop_random_members(store, &self.key, self.count) {
-            Random::Single(member) => client.write_bulk_string(&member, registry),
-            Random::Elements(members) => client.write_array(&members, registry),
-            Random::Empty => client.write_empty_array(registry),
-            Random::NotSet => client.write_null(registry),
-            Random::WrongType => client.write_simple_error(WRONG_TYPE, registry),
+            Random::Single(member) => Ok(Response::BulkString(member.clone())),
+            Random::Elements(members) => Ok(Response::List(members)),
+            Random::Empty => Ok(Response::EmptyList),
+            Random::NotSet => Ok(Response::Null),
+            Random::WrongType => Err(Error::WrongType),
         }
     }
 }
@@ -33,7 +33,7 @@ impl SetPopParser {
 }
 
 impl TryParse for SetPopParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         let key = input.next_string()?;
 
         if input.has_next() {

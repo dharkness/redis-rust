@@ -1,3 +1,5 @@
+use crate::network::Error;
+
 use super::parser::{parse_i64, parse_u64};
 
 pub struct Input<'a> {
@@ -18,22 +20,27 @@ impl<'a> Input<'a> {
         self.index < self.tokens.len()
     }
 
-    pub fn next(&mut self) -> Result<&'a str, String> {
+    pub fn next(&mut self) -> Result<&'a str, Error> {
         if !self.has_next() {
-            Err("no more tokens".to_string())
+            Err(Error::Syntax)
         } else {
             self.index += 1;
             Ok(self.tokens[self.index - 1])
         }
     }
 
-    pub fn next_string(&mut self) -> Result<String, String> {
+    pub fn next_string(&mut self) -> Result<String, Error> {
         Ok(self.next()?.to_string())
     }
 
-    pub fn next_strings(&mut self, count: usize) -> Result<Vec<String>, String> {
+    pub fn next_strings(
+        &mut self,
+        command: &str,
+        arg: &str,
+        count: usize,
+    ) -> Result<Vec<String>, Error> {
         if self.len() < count {
-            return Err("Invalid arguments specified for command".to_string());
+            return Err(Error::MissingArgument(command.to_string(), arg.to_string()));
         }
         let strings = self.tokens[self.index..self.index + count]
             .iter()
@@ -43,37 +50,28 @@ impl<'a> Input<'a> {
         Ok(strings)
     }
 
-    pub fn next_token(&mut self) -> Result<String, String> {
+    pub fn next_token(&mut self) -> Result<String, Error> {
         Ok(self.next()?.to_uppercase())
     }
 
-    pub fn next_i64(&mut self) -> Result<i64, String> {
+    pub fn next_i64(&mut self) -> Result<i64, Error> {
         parse_i64(self.next()?.as_bytes())
     }
 
-    pub fn next_u64(&mut self) -> Result<u64, String> {
+    pub fn next_u64(&mut self) -> Result<u64, Error> {
         parse_u64(self.next()?.as_bytes())
     }
 
-    pub fn next_u64_min(&mut self, min: u64) -> Result<u64, String> {
+    pub fn next_u64_min(&mut self, min: u64) -> Result<u64, Error> {
         let value = parse_u64(self.next()?.as_bytes())?;
         if value >= min {
             Ok(value)
         } else {
-            Err("Invalid arguments specified for command".to_string())
+            Err(Error::Integer)
         }
     }
 
-    pub fn next_count(&mut self) -> Result<usize, String> {
-        let count = self.next_u64()?;
-        if count > 0 {
-            Ok(count as usize)
-        } else {
-            Err("Invalid arguments specified for command".to_string())
-        }
-    }
-
-    pub fn rest(&mut self) -> Result<Vec<String>, String> {
+    pub fn rest(&mut self) -> Result<Vec<String>, Error> {
         let rest = self.tokens[self.index..]
             .iter()
             .map(|&s| s.to_string())

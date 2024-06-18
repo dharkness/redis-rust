@@ -1,10 +1,7 @@
-use std::io;
 use std::str::from_utf8;
 
-use mio::Registry;
-
 use crate::commands::CommandTree;
-use crate::network::Client;
+use crate::network::{Error, Response};
 use crate::storage::Store;
 
 use super::Input;
@@ -23,18 +20,18 @@ impl Parser {
     pub fn try_next_input<'a>(
         &self,
         buffer: &'a [u8],
-    ) -> Result<Option<(Input<'a>, usize)>, String> {
+    ) -> Result<Option<(Input<'a>, usize)>, Error> {
         if buffer.is_empty() {
             return Ok(None);
         }
         if buffer[0] != b'*' {
-            return Err("expected '*'".to_string());
+            return Err(Error::Protocol);
         }
 
         if let Some(end) = find_cr_lf(buffer) {
             let len = parse_i64(&buffer[1..end])?;
             if len < 1 {
-                return Err("invalid command length".to_string());
+                return Err(Error::Integer);
             }
 
             let mut tokens = Vec::with_capacity(len as usize);
@@ -55,18 +52,18 @@ impl Parser {
         }
     }
 
-    fn try_next_token<'a>(&self, buffer: &'a [u8]) -> Result<Option<(&'a str, usize)>, String> {
+    fn try_next_token<'a>(&self, buffer: &'a [u8]) -> Result<Option<(&'a str, usize)>, Error> {
         if buffer.is_empty() {
             return Ok(None);
         }
         if buffer[0] != b'$' {
-            return Err("expected '$'".to_string());
+            return Err(Error::Protocol);
         }
 
         if let Some(end) = find_cr_lf(buffer) {
             let len = parse_i64(&buffer[1..end])?;
             if len < 0 {
-                return Err("invalid bulk string length".to_string());
+                return Err(Error::Protocol);
             }
             let start = end + 2;
             if len as usize > buffer.len() - (start + 2) {
@@ -74,7 +71,7 @@ impl Parser {
             }
 
             Ok(Some((
-                from_utf8(&buffer[start..start + len as usize]).map_err(|e| e.to_string())?,
+                from_utf8(&buffer[start..start + len as usize]).map_err(|_| Error::Protocol)?,
                 start + len as usize + 2,
             )))
         } else {
@@ -82,17 +79,17 @@ impl Parser {
         }
     }
 
-    pub fn try_parse_command(&self, mut input: Input) -> Result<Box<dyn Apply>, String> {
+    pub fn try_parse_command(&self, mut input: Input) -> Result<Box<dyn Apply>, Error> {
         let command = input.next()?;
         println!("command: {}", command);
         let parser = self
             .commands
             .get(command)
-            .ok_or("unknown command".to_string())?;
+            .ok_or(Error::UnknownCommand(command.to_string()))?;
 
         parser.try_parse(&mut input).and_then(|parsed| {
             if input.has_next() {
-                Err("syntax error".to_string())
+                Err(Error::Syntax)
             } else {
                 Ok(parsed)
             }
@@ -110,7 +107,7 @@ fn find_cr_lf(buffer: &[u8]) -> Option<usize> {
     None
 }
 
-pub fn parse_i64(buffer: &[u8]) -> Result<i64, String> {
+pub fn parse_i64(buffer: &[u8]) -> Result<i64, Error> {
     let mut result: i64 = 0;
     let mut negative = false;
 
@@ -122,21 +119,21 @@ pub fn parse_i64(buffer: &[u8]) -> Result<i64, String> {
         if byte.is_ascii_digit() {
             result = result * 10 + (byte - b'0') as i64;
         } else {
-            return Err("invalid integer character".to_string());
+            return Err(Error::Integer);
         }
     }
 
     Ok(if negative { -result } else { result })
 }
 
-pub fn parse_u64(buffer: &[u8]) -> Result<u64, String> {
+pub fn parse_u64(buffer: &[u8]) -> Result<u64, Error> {
     let mut result: u64 = 0;
 
     for byte in buffer.iter() {
         if byte.is_ascii_digit() {
             result = result * 10 + (byte - b'0') as u64;
         } else {
-            return Err("invalid unsigned integer character".to_string());
+            return Err(Error::Integer);
         }
     }
 
@@ -144,9 +141,9 @@ pub fn parse_u64(buffer: &[u8]) -> Result<u64, String> {
 }
 
 pub trait Apply {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()>;
+    fn apply(&self, store: &mut Store) -> Result<Response, Error>;
 }
 
 pub trait TryParse {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String>;
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error>;
 }

@@ -13,16 +13,15 @@ impl PTimeToLive {
 }
 
 impl Apply for PTimeToLive {
-    fn apply(&self, store: &mut Store, client: &mut Client, registry: &Registry) -> io::Result<()> {
+    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         if !store.contains_key(&self.key) {
-            client.write_integer(-2, registry)
+            Ok(Response::I64(-2))
         } else if let Some(at) = store.expires(&self.key) {
-            client.write_integer(
+            Ok(Response::I64(
                 at.signed_duration_since(Utc::now()).num_milliseconds(),
-                registry,
-            )
+            ))
         } else {
-            client.write_integer(-1, registry)
+            Ok(Response::I64(-1))
         }
     }
 }
@@ -36,7 +35,7 @@ impl PTimeToLiveParser {
 }
 
 impl TryParse for PTimeToLiveParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         Ok(Box::new(PTimeToLive::new(input.next_string()?)))
     }
 }

@@ -11,19 +11,11 @@ impl Command {
 }
 
 impl Apply for Command {
-    fn apply(
-        &self,
-        _store: &mut Store,
-        client: &mut Client,
-        registry: &Registry,
-    ) -> io::Result<()> {
+    fn apply(&self, _store: &mut Store) -> Result<Response, Error> {
         if self.args.is_empty() {
-            client.write_simple_error("missing subcommand", registry)
+            Ok(Response::EmptyList)
         } else {
-            println!("docs");
-
-            client.write(b"%0\r\n", registry)
-            // return self.write(b"%2\r\n+PING\r\n%2\r\n+summary\r\n+Play ping-pong\r\n+group\r\n+connection\r\n+ECHO\r\n%2\r\n+summary\r\n+Hear yourself speak\r\n+group\r\n+connection\r\n", registry);
+            Ok(Response::EmptyMap)
         }
     }
 }
@@ -37,7 +29,7 @@ impl CommandParser {
 }
 
 impl TryParse for CommandParser {
-    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, String> {
+    fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         Ok(Box::new(Command::new(input.rest()?)))
     }
 }
