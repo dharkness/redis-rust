@@ -1,16 +1,16 @@
 use crate::commands::prelude::*;
 
-struct PExpireTime {
+struct ExpireTimeMillis {
     key: String,
 }
 
-impl PExpireTime {
+impl ExpireTimeMillis {
     pub fn new(key: String) -> Self {
         Self { key }
     }
 }
 
-impl Apply for PExpireTime {
+impl Apply for ExpireTimeMillis {
     fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         if !store.contains_key(&self.key) {
             Ok(Response::I64(-2))
@@ -22,16 +22,16 @@ impl Apply for PExpireTime {
     }
 }
 
-pub struct PExpireTimeParser {}
+pub struct ExpireTimeMillisParser {}
 
-impl PExpireTimeParser {
+impl ExpireTimeMillisParser {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl TryParse for PExpireTimeParser {
+impl TryParse for ExpireTimeMillisParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
-        Ok(Box::new(PExpireTime::new(input.next_string()?)))
+        Ok(Box::new(ExpireTimeMillis::new(input.next_string()?)))
     }
 }

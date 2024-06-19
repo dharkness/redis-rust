@@ -1,16 +1,16 @@
 use crate::commands::prelude::*;
 
-struct ExpireTime {
+struct ExpireTimeSecs {
     key: String,
 }
 
-impl ExpireTime {
+impl ExpireTimeSecs {
     pub fn new(key: String) -> Self {
         Self { key }
     }
 }
 
-impl Apply for ExpireTime {
+impl Apply for ExpireTimeSecs {
     fn apply(&self, store: &mut Store) -> Result<Response, Error> {
         if !store.contains_key(&self.key) {
             Ok(Response::I64(-2))
@@ -22,16 +22,16 @@ impl Apply for ExpireTime {
     }
 }
 
-pub struct ExpireTimeParser {}
+pub struct ExpireTimeSecsParser {}
 
-impl ExpireTimeParser {
+impl ExpireTimeSecsParser {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl TryParse for ExpireTimeParser {
+impl TryParse for ExpireTimeSecsParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
-        Ok(Box::new(ExpireTime::new(input.next_string()?)))
+        Ok(Box::new(ExpireTimeSecs::new(input.next_string()?)))
     }
 }

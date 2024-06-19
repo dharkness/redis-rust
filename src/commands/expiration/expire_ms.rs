@@ -4,25 +4,21 @@ use chrono::Utc;
 
 use crate::commands::prelude::*;
 
-use super::expire::{Expire, ExpireParser};
+use super::{Expire, try_expiry};
 
-pub struct PExpireParser {
+pub struct ExpireMillisParser {
     options: Options<Expire>,
 }
 
-impl PExpireParser {
+impl ExpireMillisParser {
     pub fn new() -> Self {
         Self {
-            options: vec![(vec!["NX", "XX", "LT", "GT"], PExpireParser::try_expiry)],
+            options: vec![(vec!["NX", "XX", "LT", "GT"], try_expiry)],
         }
-    }
-
-    fn try_expiry(expire: &mut Expire, token: &str, input: &mut Input) -> Result<(), Error> {
-        ExpireParser::try_expiry(expire, token, input)
     }
 }
 
-impl TryParse for PExpireParser {
+impl TryParse for ExpireMillisParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         let key = input.next_string()?;
         let milliseconds = input.next_u64()?;
@@ -45,12 +41,4 @@ impl TryParse for PExpireParser {
             ),
         )?))
     }
-}
-
-enum Expiry {
-    Ignore,
-    Has,
-    None,
-    LessThan,
-    GreaterThan,
 }

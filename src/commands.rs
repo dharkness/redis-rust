@@ -9,6 +9,7 @@ mod prelude {
 }
 
 mod common;
+mod expiration;
 mod server;
 mod sets;
 mod strings;
@@ -26,30 +27,45 @@ fn get_commands() -> [(&'static str, Box<dyn TryParse>); 42] {
         ("COPY", Box::new(common::copy::CopyParser::new())),
         ("DEL", Box::new(common::del::DelParser::new())),
         ("EXISTS", Box::new(common::exists::ExistsParser::new())),
-        ("EXPIRE", Box::new(common::expire::ExpireParser::new())),
+        ("KEYS", Box::new(common::keys::KeysParser::new())),
+        ("RENAME", Box::new(common::rename::RenameParser::new())),
+        ("TYPE", Box::new(common::r#type::TypeParser::new())),
+        //
+        // expiration
+        //
+        (
+            "EXPIRE",
+            Box::new(expiration::expire_s::ExpireSecsParser::new()),
+        ),
         (
             "EXPIREAT",
-            Box::new(common::expire_at::ExpireAtParser::new()),
+            Box::new(expiration::expire_at_s::ExpireAtSecsParser::new()),
         ),
         (
             "EXPIRETIME",
-            Box::new(common::expire_time::ExpireTimeParser::new()),
+            Box::new(expiration::expire_time_s::ExpireTimeSecsParser::new()),
         ),
-        ("KEYS", Box::new(common::keys::KeysParser::new())),
-        ("PERSIST", Box::new(common::persist::PersistParser::new())),
-        ("PEXPIRE", Box::new(common::p_expire::PExpireParser::new())),
         (
-            "PEXPIREAT",
-            Box::new(common::p_expire_at::PExpireAtParser::new()),
+            "PERSIST",
+            Box::new(expiration::persist::PersistParser::new()),
+        ),
+        (
+            "PEXPIRE",
+            Box::new(expiration::expire_ms::ExpireMillisParser::new()),
+        ),
+        (
+            "ExpireAtMillis",
+            Box::new(expiration::expire_at_ms::ExpireAtMillisParser::new()),
         ),
         (
             "PEXPIRETIME",
-            Box::new(common::p_expire_time::PExpireTimeParser::new()),
+            Box::new(expiration::expire_time_ms::ExpireTimeMillisParser::new()),
         ),
-        ("PTTL", Box::new(common::p_ttl::PTimeToLiveParser::new())),
-        ("RENAME", Box::new(common::rename::RenameParser::new())),
-        ("TTL", Box::new(common::ttl::TimeToLiveParser::new())),
-        ("TYPE", Box::new(common::r#type::TypeParser::new())),
+        (
+            "PTTL",
+            Box::new(expiration::ttl_ms::PTimeToLiveParser::new()),
+        ),
+        ("TTL", Box::new(expiration::ttl_s::TimeToLiveParser::new())),
         //
         // strings
         //
