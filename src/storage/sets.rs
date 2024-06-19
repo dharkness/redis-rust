@@ -7,8 +7,8 @@ use rand::seq::SliceRandom;
 use crate::storage::{IfKindResult, Kind, Store, Value};
 
 pub enum SetOp<'a> {
-    Set(HashSet<String>),
-    SetRef(&'a HashSet<String>),
+    New(HashSet<String>),
+    ValueRef(&'a Value),
     Empty,
     WrongType,
 }
@@ -35,7 +35,7 @@ pub fn diff<'a>(store: &'a mut Store, keys: &Vec<String>, limit: usize) -> SetOp
             if diff.is_empty() {
                 SetOp::Empty
             } else {
-                SetOp::Set(diff)
+                SetOp::New(diff)
             }
         }
         IfKindResult::NotSet => SetOp::Empty,
@@ -81,7 +81,7 @@ pub fn intersect<'a>(store: &'a mut Store, keys: &Vec<String>, limit: usize) -> 
             if intersection.is_empty() {
                 SetOp::Empty
             } else {
-                SetOp::Set(intersection)
+                SetOp::New(intersection)
             }
         }
         IfKindResult::NotSet => SetOp::Empty,
@@ -160,7 +160,7 @@ pub fn union<'a>(store: &'a mut Store, keys: &Vec<String>, limit: usize) -> SetO
             if union.is_empty() {
                 SetOp::Empty
             } else {
-                SetOp::Set(union)
+                SetOp::New(union)
             }
         }
         IfKindResult::NotSet => SetOp::Empty,
@@ -184,11 +184,12 @@ where
 
 fn trim_to_limit<'a>(store: &'a Store, key: &str, limit: usize) -> SetOp<'a> {
     return match store.get_if_kind(Kind::Set, key) {
-        IfKindResult::Matched(Value::Set(members)) => {
+        IfKindResult::Matched(value) if value.is_set() => {
+            let members = value.expect_set();
             if members.len() > limit {
-                SetOp::Set(members.iter().take(limit).cloned().collect())
+                SetOp::New(members.iter().take(limit).cloned().collect())
             } else {
-                SetOp::SetRef(members)
+                SetOp::ValueRef(value)
             }
         }
         IfKindResult::NotSet => SetOp::Empty,

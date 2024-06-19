@@ -17,19 +17,13 @@ impl SetIntersectCard {
 
 impl Apply for SetIntersectCard {
     fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
-        let intersection = match intersect(store, &self.from, self.limit) {
-            SetOp::Set(members) => members,
-            SetOp::SetRef(members) => {
-                if members.len() > self.limit {
-                    members.iter().take(self.limit).cloned().collect()
-                } else {
-                    members.clone()
-                }
-            }
+        let len = match intersect(store, &self.from, self.limit) {
+            SetOp::New(members) => members.len(),
+            SetOp::ValueRef(Value::Set(members)) => usize::min(members.len(), self.limit),
             SetOp::Empty => return Ok(Response::EmptySet),
-            SetOp::WrongType => return Err(Error::WrongType),
+            _ => return Err(Error::WrongType),
         };
-        Ok(Response::Usize(intersection.len()))
+        Ok(Response::Usize(len))
     }
 }
 

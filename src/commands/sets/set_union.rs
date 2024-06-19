@@ -14,8 +14,8 @@ impl SetUnion {
 impl Apply for SetUnion {
     fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         match union(store, &self.keys, usize::MAX) {
-            SetOp::Set(members) => Ok(Response::Set(members)),
-            SetOp::SetRef(members) => Ok(Response::Set(members.clone())),
+            SetOp::New(members) => Ok(Response::Set(members)),
+            SetOp::ValueRef(value) => Ok(Response::ValueRef(value)),
             SetOp::Empty => Ok(Response::EmptySet),
             SetOp::WrongType => Err(Error::WrongType),
         }
