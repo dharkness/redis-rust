@@ -12,7 +12,7 @@ impl Rename {
 }
 
 impl Apply for Rename {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         if store.rename(&self.key, &self.new_key) {
             Ok(Response::Ok)
         } else {

@@ -11,7 +11,7 @@ impl Del {
 }
 
 impl Apply for Del {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         Ok(Response::Usize(
             self.keys
                 .iter()

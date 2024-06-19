@@ -13,7 +13,7 @@ impl SetDiffStore {
 }
 
 impl Apply for SetDiffStore {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         let diff = match diff(store, &self.from, usize::MAX) {
             SetOp::Set(members) => members,
             SetOp::SetRef(members) => members.clone(),

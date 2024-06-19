@@ -24,7 +24,7 @@ impl Set {
 }
 
 impl Apply for Set {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         match self.when {
             When::Exists => {
                 if !store.contains_key(&self.key) {
@@ -40,8 +40,8 @@ impl Apply for Set {
         }
 
         let previous = if self.get {
-            match store.get_if_kind(Kind::String, &self.key) {
-                IfKindResult::Matched(Value::String(s)) => Some(s.clone()),
+            match store.get_and_remove_if_kind(Kind::String, &self.key) {
+                IfKindResult::Matched(value) if value.is_string() => Some(value),
                 IfKindResult::NotSet => None,
                 _ => return Err(Error::WrongType),
             }
@@ -49,24 +49,28 @@ impl Apply for Set {
             None
         };
 
-        match self.expire {
-            Expiration::Keep => (),
+        let removed = match self.expire {
+            Expiration::Keep => false,
             Expiration::Never => {
                 store.persist(&self.key);
+                false
             }
             Expiration::At(at) => {
                 if at > Utc::now() {
                     store.expire_at(&self.key, &at);
+                    false
                 } else {
                     store.remove(&self.key);
-                    return Ok(Response::Ok);
+                    true
                 }
             }
-        }
+        };
 
-        store.set(&self.key, Value::from(self.value.clone()));
+        if !removed {
+            store.set(&self.key, Value::from(self.value.clone()));
+        }
         match previous {
-            Some(s) => Ok(Response::BulkString(s)),
+            Some(value) => Ok(Response::Value(value)),
             None if self.get => Ok(Response::Null),
             _ => Ok(Response::Ok),
         }

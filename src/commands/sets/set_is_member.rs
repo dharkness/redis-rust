@@ -12,7 +12,7 @@ impl SetIsMember {
 }
 
 impl Apply for SetIsMember {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         match store.get_if_kind(Kind::Set, &self.key) {
             IfKindResult::Matched(Value::Set(members)) => {
                 Ok(Response::int_from_bool(members.contains(&self.value)))

@@ -13,7 +13,7 @@ impl GetRange {
 }
 
 impl Apply for GetRange {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         match store.get_if_kind(Kind::String, &self.key) {
             IfKindResult::Matched(Value::String(s)) => {
                 let len = s.len() as i64;

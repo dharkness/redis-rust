@@ -11,9 +11,9 @@ impl SetMembers {
 }
 
 impl Apply for SetMembers {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         match store.get_if_kind(Kind::Set, &self.key) {
-            IfKindResult::Matched(Value::Set(members)) => Ok(Response::Set(members.clone())),
+            IfKindResult::Matched(value) if value.is_set() => Ok(Response::ValueRef(value)),
             IfKindResult::NotSet => Ok(Response::Null),
             _ => Err(Error::WrongType),
         }

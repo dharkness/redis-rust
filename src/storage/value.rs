@@ -41,6 +41,22 @@ impl Value {
         }
     }
 
+    pub fn is_integer(&self) -> bool {
+        matches!(self, Value::Integer(_))
+    }
+
+    pub fn is_list(&self) -> bool {
+        matches!(self, Value::List(_))
+    }
+
+    pub fn is_set(&self) -> bool {
+        matches!(self, Value::Set(_))
+    }
+
+    pub fn is_string(&self) -> bool {
+        matches!(self, Value::String(_))
+    }
+
     pub fn expect_set(&self) -> &HashSet<String> {
         match self {
             Value::Set(members) => members,

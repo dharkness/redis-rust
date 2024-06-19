@@ -11,7 +11,7 @@ impl Persist {
 }
 
 impl Apply for Persist {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         if store.contains_key(&self.key) && store.persist(&self.key) {
             Ok(Response::One)
         } else {

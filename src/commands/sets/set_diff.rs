@@ -12,7 +12,7 @@ impl SetDiff {
 }
 
 impl Apply for SetDiff {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         match diff(store, &self.keys, usize::MAX) {
             SetOp::Set(members) => Ok(Response::Set(members)),
             SetOp::SetRef(members) => Ok(Response::Set(members.clone())),

@@ -11,7 +11,7 @@ impl ExpireTimeMillis {
 }
 
 impl Apply for ExpireTimeMillis {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         if !store.contains_key(&self.key) {
             Ok(Response::I64(-2))
         } else if let Some(at) = store.expires(&self.key) {

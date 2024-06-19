@@ -13,7 +13,7 @@ impl SetPop {
 }
 
 impl Apply for SetPop {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         match pop_random_members(store, &self.key, self.count) {
             Random::Single(member) => Ok(Response::BulkString(member.clone())),
             Random::Elements(members) => Ok(Response::List(members)),

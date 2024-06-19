@@ -1,5 +1,5 @@
 use crate::commands::prelude::*;
-use crate::storage::{Random, random_members};
+use crate::storage::{random_members, Random};
 
 struct SetRandomMembers {
     key: String,
@@ -14,7 +14,7 @@ impl SetRandomMembers {
 }
 
 impl Apply for SetRandomMembers {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         match random_members(store, &self.key, self.count, self.dupes) {
             Random::Single(member) => Ok(Response::BulkString(member.clone())),
             Random::Elements(members) => Ok(Response::List(members)),

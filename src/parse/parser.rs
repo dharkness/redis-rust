@@ -141,7 +141,7 @@ pub fn parse_u64(buffer: &[u8]) -> Result<u64, Error> {
 }
 
 pub trait Apply {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error>;
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error>;
 }
 
 pub trait TryParse {

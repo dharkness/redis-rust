@@ -1,5 +1,5 @@
 use crate::commands::prelude::*;
-use crate::storage::{SetOp, union};
+use crate::storage::{union, SetOp};
 
 struct SetUnionStore {
     from: Vec<String>,
@@ -13,7 +13,7 @@ impl SetUnionStore {
 }
 
 impl Apply for SetUnionStore {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         let union = match union(store, &self.from, usize::MAX) {
             SetOp::Set(members) => members,
             SetOp::SetRef(members) => members.clone(),

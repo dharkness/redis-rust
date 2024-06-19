@@ -19,7 +19,7 @@ impl Expire {
 }
 
 impl Apply for Expire {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         let allow = store.contains_key(&self.key)
             && match self.expiry {
                 When::Always => true,
@@ -34,7 +34,7 @@ impl Apply for Expire {
 
         if self.at <= Utc::now() {
             store.remove(&self.key);
-            return Ok(Response::Zero);
+            Ok(Response::Zero)
         } else {
             store.expire_at(&self.key, &self.at);
             Ok(Response::One)

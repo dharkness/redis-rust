@@ -18,7 +18,7 @@ impl Type {
 }
 
 impl Apply for Type {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         match store.get(&self.key) {
             Some(value) => match value.kind() {
                 Kind::Integer => Ok(INTEGER),

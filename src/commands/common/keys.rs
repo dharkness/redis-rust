@@ -12,7 +12,7 @@ impl Keys {
 }
 
 impl Apply for Keys {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         if let Ok(pattern) = Pattern::try_parse(&self.pattern) {
             Ok(Response::List(store.keys(&pattern)))
         } else {

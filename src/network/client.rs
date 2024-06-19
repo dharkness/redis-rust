@@ -151,6 +151,7 @@ impl Client {
             Response::List(list) => self.write_list(list),
             Response::Set(set) => self.write_set(set),
             Response::Value(value) => self.write_value(value),
+            Response::ValueRef(value) => self.write_value(value),
             Response::ValueList(list) => {
                 self.write_string(format!("*{}\r\n", list.len()))?;
                 for value in list {

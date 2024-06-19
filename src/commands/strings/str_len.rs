@@ -11,14 +11,11 @@ impl StrLen {
 }
 
 impl Apply for StrLen {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
-        if let Some(value) = store.get(&self.key) {
-            match value {
-                Value::String(s) => Ok(Response::Usize(s.len())),
-                _ => Err(Error::WrongType),
-            }
-        } else {
-            Ok(Response::Zero)
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
+        match store.get_if_kind(Kind::String, &self.key) {
+            IfKindResult::Matched(Value::String(s)) => Ok(Response::Usize(s.len())),
+            IfKindResult::NotSet => Ok(Response::Zero),
+            _ => Err(Error::WrongType),
         }
     }
 }

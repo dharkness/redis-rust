@@ -16,7 +16,7 @@ impl SetIntersectCard {
 }
 
 impl Apply for SetIntersectCard {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         let intersection = match intersect(store, &self.from, self.limit) {
             SetOp::Set(members) => members,
             SetOp::SetRef(members) => {

@@ -11,7 +11,7 @@ impl Command {
 }
 
 impl Apply for Command {
-    fn apply(&self, _store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, _store: &'a mut Store) -> Result<Response<'a>, Error> {
         if self.args.is_empty() {
             Ok(Response::EmptyList)
         } else {

@@ -21,7 +21,8 @@ pub enum Response<'a> {
     BulkString(String),
     List(Vec<String>),
     Set(HashSet<String>),
-    Value(&'a Value),
+    Value(Value),
+    ValueRef(&'a Value),
     ValueList(Vec<Value>),
 }
 

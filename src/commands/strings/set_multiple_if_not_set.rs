@@ -11,7 +11,7 @@ impl SetMultipleIfNotSet {
 }
 
 impl Apply for SetMultipleIfNotSet {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         if self.key_value_pairs.len() % 2 != 0 {
             Err(Error::Syntax)
         } else {

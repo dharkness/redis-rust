@@ -11,7 +11,7 @@ impl Echo {
 }
 
 impl Apply for Echo {
-    fn apply(&self, _store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, _store: &'a mut Store) -> Result<Response<'a>, Error> {
         Ok(Response::BulkString(self.message.clone()))
     }
 }

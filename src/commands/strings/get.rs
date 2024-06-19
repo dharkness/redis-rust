@@ -11,9 +11,9 @@ impl Get {
 }
 
 impl Apply for Get {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         match store.get_if_kind(Kind::String, &self.key) {
-            IfKindResult::Matched(Value::String(s)) => Ok(Response::BulkString(s.clone())),
+            IfKindResult::Matched(value) if value.is_string() => Ok(Response::ValueRef(value)),
             IfKindResult::NotSet => Ok(Response::Null),
             _ => Err(Error::WrongType),
         }

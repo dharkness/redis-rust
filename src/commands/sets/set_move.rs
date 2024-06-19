@@ -13,7 +13,7 @@ impl SetMove {
 }
 
 impl Apply for SetMove {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         if !match store.get_if_kind(Kind::Set, &self.from) {
             IfKindResult::Matched(Value::Set(members)) => {
                 let contains = members.contains(&self.value);

@@ -17,7 +17,7 @@ impl Copy {
 }
 
 impl Apply for Copy {
-    fn apply(&self, store: &mut Store) -> Result<Response, Error> {
+    fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         if (self.replace || !store.contains_key(&self.destination))
             && store.copy(&self.source, &self.destination)
         {
