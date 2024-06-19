@@ -67,9 +67,3 @@ impl TryParse for SetMoveParser {
         )))
     }
 }
-
-enum When {
-    Always,
-    Exists,
-    NotExists,
-}

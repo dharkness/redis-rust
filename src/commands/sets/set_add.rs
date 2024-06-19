@@ -45,9 +45,3 @@ impl TryParse for SetAddParser {
         Ok(Box::new(SetAdd::new(input.next_string()?, input.rest()?)))
     }
 }
-
-enum When {
-    Always,
-    Exists,
-    NotExists,
-}

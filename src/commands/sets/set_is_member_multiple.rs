@@ -52,9 +52,3 @@ impl TryParse for SetIsMemberMultipleParser {
         )))
     }
 }
-
-enum When {
-    Always,
-    Exists,
-    NotExists,
-}

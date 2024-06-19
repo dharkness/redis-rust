@@ -48,9 +48,3 @@ impl TryParse for SetRemoveParser {
         )))
     }
 }
-
-enum When {
-    Always,
-    Exists,
-    NotExists,
-}
