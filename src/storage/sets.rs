@@ -209,8 +209,8 @@ pub fn random_members(store: &mut Store, key: &str, count: usize, dupes: bool) -
         return Random::Empty;
     }
 
-    match store.get_mut_if_kind(Kind::Set, key) {
-        IfKindResult::Matched(Value::Set(ref mut members)) => {
+    match store.get_if_kind(Kind::Set, key) {
+        IfKindResult::Matched(Value::Set(members)) => {
             let mut rng = thread_rng();
 
             if count == 1 {
