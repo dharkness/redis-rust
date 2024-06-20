@@ -62,6 +62,10 @@ impl<'a> Input<'a> {
         parse_u64(self.next()?.as_bytes())
     }
 
+    pub fn next_usize(&mut self) -> Result<usize, Error> {
+        parse_u64(self.next()?.as_bytes()).map(|n| n as usize)
+    }
+
     pub fn next_u64_min(&mut self, min: u64) -> Result<u64, Error> {
         let value = parse_u64(self.next()?.as_bytes())?;
         if value >= min {

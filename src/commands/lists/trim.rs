@@ -1,46 +1,48 @@
 use crate::commands::prelude::*;
 
-struct GetRange {
+struct Trim {
     key: String,
     start: i64,
     end: i64,
 }
 
-impl GetRange {
+impl Trim {
     pub fn new(key: String, start: i64, end: i64) -> Self {
         Self { key, start, end }
     }
 }
 
-impl Apply for GetRange {
+impl Apply for Trim {
     fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
-        match store.get_if_kind(Kind::String, &self.key) {
-            IfKindResult::Matched(Value::String(s)) => {
-                let range = clamp_range(s.len(), self.start, self.end);
+        match store.get_mut_if_kind(Kind::List, &self.key) {
+            IfKindResult::Matched(Value::List(list)) => {
+                let range = clamp_range(list.len(), self.start, self.end);
 
                 if range.is_empty() {
-                    Ok(Response::EmptyBulkString)
+                    store.remove(&self.key);
                 } else {
-                    Ok(Response::BulkStringRef(&s[range]))
+                    list.drain(0..range.start);
+                    list.drain(range.end - range.start..);
                 }
+                Ok(Response::Ok)
             }
-            IfKindResult::NotSet => Ok(Response::Null),
+            IfKindResult::NotSet => Ok(Response::Ok),
             _ => Err(Error::WrongType),
         }
     }
 }
 
-pub struct GetRangeParser {}
+pub struct TrimParser {}
 
-impl GetRangeParser {
+impl TrimParser {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl TryParse for GetRangeParser {
+impl TryParse for TrimParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
-        Ok(Box::new(GetRange::new(
+        Ok(Box::new(Trim::new(
             input.next_string()?,
             input.next_i64()?,
             input.next_i64()?,

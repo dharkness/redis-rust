@@ -5,16 +5,17 @@ use crate::parse::TryParse;
 mod prelude {
     pub use crate::network::*;
     pub use crate::parse::{Apply, Input, Options, parse_options, TryParse};
-    pub use crate::storage::{IfKindResult, Kind, Store, Value};
+    pub use crate::storage::{clamp, clamp_range, IfKindResult, Kind, Store, Value};
 }
 
 mod common;
 mod expiration;
+mod lists;
 mod server;
 mod sets;
 mod strings;
 
-fn get_commands() -> [(&'static str, Box<dyn TryParse>); 42] {
+fn get_commands() -> [(&'static str, Box<dyn TryParse>); 53] {
     [
         //
         // server
@@ -87,6 +88,26 @@ fn get_commands() -> [(&'static str, Box<dyn TryParse>); 42] {
         ),
         ("SET", Box::new(strings::set::SetParser::new())),
         ("STRLEN", Box::new(strings::str_len::StrLenParser::new())),
+        //
+        // lists
+        //
+        ("LINDEX", Box::new(lists::index::IndexParser::new())),
+        ("LINSERT", Box::new(lists::insert::InsertParser::new())),
+        ("LLEN", Box::new(lists::len::LenParser::new())),
+        ("LPUSH", Box::new(lists::left_push::LeftPushParser::new())),
+        (
+            "LPUSHX",
+            Box::new(lists::left_push_exists::LeftPushExistsParser::new()),
+        ),
+        ("LRANGE", Box::new(lists::range::RangeParser::new())),
+        ("LREM", Box::new(lists::remove::RemoveParser::new())),
+        ("LSET", Box::new(lists::set::SetParser::new())),
+        ("LTRIM", Box::new(lists::trim::TrimParser::new())),
+        ("RPUSH", Box::new(lists::right_push::RightPushParser::new())),
+        (
+            "RPUSHX",
+            Box::new(lists::right_push_exists::RightPushExistsParser::new()),
+        ),
         //
         // sets
         //
