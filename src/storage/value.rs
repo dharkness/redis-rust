@@ -70,6 +70,27 @@ impl Value {
             _ => panic!("expected set"),
         }
     }
+
+    pub fn into_list(self) -> Vec<String> {
+        match self {
+            Value::List(list) => list,
+            _ => panic!("expected list"),
+        }
+    }
+
+    pub fn expect_list(&self) -> &Vec<String> {
+        match self {
+            Value::List(list) => list,
+            _ => panic!("expected list"),
+        }
+    }
+
+    pub fn expect_list_mut(&mut self) -> &mut Vec<String> {
+        match self {
+            Value::List(list) => list,
+            _ => panic!("expected list"),
+        }
+    }
 }
 
 impl From<Vec<String>> for Value {

@@ -1,5 +1,6 @@
 pub mod index;
 pub mod insert;
+pub mod left_pop;
 pub mod left_push;
 pub mod left_push_exists;
 pub mod len;

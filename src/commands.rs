@@ -80,6 +80,7 @@ impl CommandTree {
             .insert("LINSERT", Box::new(lists::insert::InsertParser::new()))
             .insert("LLEN", Box::new(lists::len::LenParser::new()))
             .insert("LMOVE", Box::new(lists::r#move::MoveParser::new()))
+            .insert("LPOP", Box::new(lists::left_pop::LeftPopParser::new()))
             .insert("LPOS", Box::new(lists::position::PositionParser::new()))
             .insert("LPUSH", Box::new(lists::left_push::LeftPushParser::new()))
             .insert(
