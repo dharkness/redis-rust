@@ -91,6 +91,7 @@ impl CommandTree {
             .insert("LREM", Box::new(lists::remove::RemoveParser::new()))
             .insert("LSET", Box::new(lists::set::SetParser::new()))
             .insert("LTRIM", Box::new(lists::trim::TrimParser::new()))
+            .insert("RPOP", Box::new(lists::right_pop::RightPopParser::new()))
             .insert("RPUSH", Box::new(lists::right_push::RightPushParser::new()))
             .insert(
                 "RPUSHX",

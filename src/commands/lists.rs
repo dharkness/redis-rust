@@ -8,6 +8,7 @@ pub mod r#move;
 pub mod position;
 pub mod range;
 pub mod remove;
+pub mod right_pop;
 pub mod right_push;
 pub mod right_push_exists;
 pub mod set;
