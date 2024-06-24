@@ -79,6 +79,7 @@ impl CommandTree {
             .insert("LINDEX", Box::new(lists::index::IndexParser::new()))
             .insert("LINSERT", Box::new(lists::insert::InsertParser::new()))
             .insert("LLEN", Box::new(lists::len::LenParser::new()))
+            .insert("LPOS", Box::new(lists::position::PositionParser::new()))
             .insert("LPUSH", Box::new(lists::left_push::LeftPushParser::new()))
             .insert(
                 "LPUSHX",
