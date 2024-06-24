@@ -1,47 +1,47 @@
 use crate::commands::prelude::*;
 
-struct SetAdd {
+struct Remove {
     key: String,
     values: Vec<String>,
 }
 
-impl SetAdd {
+impl Remove {
     pub fn new(key: String, values: Vec<String>) -> Self {
         Self { key, values }
     }
 }
 
-impl Apply for SetAdd {
+impl Apply for Remove {
     fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         match store.get_mut_if_kind(Kind::Set, &self.key) {
             IfKindResult::Matched(Value::Set(ref mut members)) => {
-                let mut added = 0;
+                let mut removed = 0;
                 for value in &self.values {
-                    if members.insert(value.clone()) {
-                        added += 1;
+                    if members.remove(value) {
+                        removed += 1;
                     }
                 }
-                Ok(Response::Usize(added))
+                if members.is_empty() {
+                    store.remove(&self.key);
+                }
+                Ok(Response::Usize(removed))
             }
-            IfKindResult::NotSet => {
-                store.set(&self.key, Value::set_from_vec(&self.values));
-                Ok(Response::Usize(self.values.len()))
-            }
+            IfKindResult::NotSet => Ok(Response::Zero),
             _ => Err(Error::WrongType),
         }
     }
 }
 
-pub struct SetAddParser {}
+pub struct RemoveParser {}
 
-impl SetAddParser {
+impl RemoveParser {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl TryParse for SetAddParser {
+impl TryParse for RemoveParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
-        Ok(Box::new(SetAdd::new(input.next_string()?, input.rest()?)))
+        Ok(Box::new(Remove::new(input.next_string()?, input.rest()?)))
     }
 }

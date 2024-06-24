@@ -104,48 +104,42 @@ impl CommandTree {
             //
             // sets
             //
-            .insert("SADD", Box::new(sets::set_add::SetAddParser::new()))
-            .insert("SCARD", Box::new(sets::set_card::SetCardParser::new()))
-            .insert("SDIFF", Box::new(sets::set_diff::SetDiffParser::new()))
+            .insert("SADD", Box::new(sets::add::AddParser::new()))
+            .insert("SCARD", Box::new(sets::card::CardParser::new()))
+            .insert("SDIFF", Box::new(sets::diff::DiffParser::new()))
             .insert(
                 "SDIFFSTORE",
-                Box::new(sets::set_diff_store::SetDiffStoreParser::new()),
+                Box::new(sets::diff_store::DiffStoreParser::new()),
             )
-            .insert(
-                "SINTER",
-                Box::new(sets::set_intersect::SetIntersectParser::new()),
-            )
+            .insert("SINTER", Box::new(sets::intersect::IntersectParser::new()))
             .insert(
                 "SINTERCARD",
-                Box::new(sets::set_intersect_card::SetIntersectCardParser::new()),
+                Box::new(sets::intersect_card::IntersectCardParser::new()),
             )
             .insert(
                 "SINTERSTORE",
-                Box::new(sets::set_intersect_store::SetIntersectStoreParser::new()),
+                Box::new(sets::intersect_store::IntersectStoreParser::new()),
             )
             .insert(
                 "SISMEMBER",
-                Box::new(sets::set_is_member::SetIsMemberParser::new()),
+                Box::new(sets::is_member::IsMemberParser::new()),
             )
-            .insert(
-                "SMEMBERS",
-                Box::new(sets::set_members::SetMembersParser::new()),
-            )
+            .insert("SMEMBERS", Box::new(sets::members::MembersParser::new()))
             .insert(
                 "SMISMEMBER",
-                Box::new(sets::set_is_member_multiple::SetIsMemberMultipleParser::new()),
+                Box::new(sets::is_member_multiple::IsMemberMultipleParser::new()),
             )
-            .insert("SMOVE", Box::new(sets::set_move::SetMoveParser::new()))
-            .insert("SPOP", Box::new(sets::set_pop::SetPopParser::new()))
+            .insert("SMOVE", Box::new(sets::r#move::MoveParser::new()))
+            .insert("SPOP", Box::new(sets::pop::PopParser::new()))
             .insert(
                 "SRANDMEMBER",
-                Box::new(sets::set_random_members::SetRandomMembersParser::new()),
+                Box::new(sets::random_members::RandomMembersParser::new()),
             )
-            .insert("SREM", Box::new(sets::set_remove::SetRemoveParser::new()))
-            .insert("SUNION", Box::new(sets::set_union::SetUnionParser::new()))
+            .insert("SREM", Box::new(sets::remove::RemoveParser::new()))
+            .insert("SUNION", Box::new(sets::union::UnionParser::new()))
             .insert(
                 "SUNIONSTORE",
-                Box::new(sets::set_union_store::SetUnionStoreParser::new()),
+                Box::new(sets::union_store::UnionStoreParser::new()),
             )
             //
             // strings

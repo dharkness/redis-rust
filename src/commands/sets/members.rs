@@ -1,16 +1,16 @@
 use crate::commands::prelude::*;
 
-struct SetMembers {
+struct Members {
     key: String,
 }
 
-impl SetMembers {
+impl Members {
     pub fn new(key: String) -> Self {
         Self { key }
     }
 }
 
-impl Apply for SetMembers {
+impl Apply for Members {
     fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         match store.get_if_kind(Kind::Set, &self.key) {
             IfKindResult::Matched(value) if value.is_set() => Ok(Response::ValueRef(value)),
@@ -20,16 +20,16 @@ impl Apply for SetMembers {
     }
 }
 
-pub struct SetMembersParser {}
+pub struct MembersParser {}
 
-impl SetMembersParser {
+impl MembersParser {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl TryParse for SetMembersParser {
+impl TryParse for MembersParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
-        Ok(Box::new(SetMembers::new(input.next_string()?)))
+        Ok(Box::new(Members::new(input.next_string()?)))
     }
 }

@@ -2,18 +2,18 @@ use itertools::Itertools;
 
 use crate::commands::prelude::*;
 
-struct SetIsMemberMultiple {
+struct IsMemberMultiple {
     key: String,
     values: Vec<String>,
 }
 
-impl SetIsMemberMultiple {
+impl IsMemberMultiple {
     pub fn new(key: String, values: Vec<String>) -> Self {
         Self { key, values }
     }
 }
 
-impl Apply for SetIsMemberMultiple {
+impl Apply for IsMemberMultiple {
     fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         match store.get_if_kind(Kind::Set, &self.key) {
             IfKindResult::Matched(Value::Set(members)) => Ok(Response::ValueList(
@@ -36,17 +36,17 @@ impl Apply for SetIsMemberMultiple {
     }
 }
 
-pub struct SetIsMemberMultipleParser {}
+pub struct IsMemberMultipleParser {}
 
-impl SetIsMemberMultipleParser {
+impl IsMemberMultipleParser {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl TryParse for SetIsMemberMultipleParser {
+impl TryParse for IsMemberMultipleParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
-        Ok(Box::new(SetIsMemberMultiple::new(
+        Ok(Box::new(IsMemberMultiple::new(
             input.next_string()?,
             input.rest()?,
         )))

@@ -1,12 +1,12 @@
 use crate::commands::prelude::*;
 use crate::storage::{intersect, SetOp};
 
-struct SetIntersectCard {
+struct IntersectCard {
     from: Vec<String>,
     limit: usize,
 }
 
-impl SetIntersectCard {
+impl IntersectCard {
     pub fn new(from: Vec<String>) -> Self {
         Self {
             from,
@@ -15,7 +15,7 @@ impl SetIntersectCard {
     }
 }
 
-impl Apply for SetIntersectCard {
+impl Apply for IntersectCard {
     fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         let len = match intersect(store, &self.from, self.limit) {
             SetOp::New(members) => members.len(),
@@ -27,18 +27,18 @@ impl Apply for SetIntersectCard {
     }
 }
 
-pub struct SetIntersectCardParser {
-    options: Options<SetIntersectCard>,
+pub struct IntersectCardParser {
+    options: Options<IntersectCard>,
 }
 
-impl SetIntersectCardParser {
+impl IntersectCardParser {
     pub fn new() -> Self {
         Self {
-            options: vec![(vec!["LIMIT"], SetIntersectCardParser::try_limit)],
+            options: vec![(vec!["LIMIT"], IntersectCardParser::try_limit)],
         }
     }
 
-    fn try_limit(set: &mut SetIntersectCard, _: &str, input: &mut Input) -> Result<(), Error> {
+    fn try_limit(set: &mut IntersectCard, _: &str, input: &mut Input) -> Result<(), Error> {
         let limit = input.next_u64()? as usize;
         if limit > 0 {
             set.limit = limit;
@@ -47,7 +47,7 @@ impl SetIntersectCardParser {
     }
 }
 
-impl TryParse for SetIntersectCardParser {
+impl TryParse for IntersectCardParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         let count = input.next_u64_min(1)? as usize;
         let keys = input.next_strings("SINTERCARD", "key", count)?;
@@ -56,7 +56,7 @@ impl TryParse for SetIntersectCardParser {
             "SINTERCARD",
             &self.options,
             input,
-            SetIntersectCard::new(keys),
+            IntersectCard::new(keys),
         )?))
     }
 }

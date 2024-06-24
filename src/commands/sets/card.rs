@@ -1,16 +1,16 @@
 use crate::commands::prelude::*;
 
-struct SetCard {
+struct Card {
     key: String,
 }
 
-impl SetCard {
+impl Card {
     pub fn new(key: String) -> Self {
         Self { key }
     }
 }
 
-impl Apply for SetCard {
+impl Apply for Card {
     fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         match store.get_if_kind(Kind::Set, &self.key) {
             IfKindResult::Matched(Value::Set(members)) => Ok(Response::Usize(members.len())),
@@ -20,16 +20,16 @@ impl Apply for SetCard {
     }
 }
 
-pub struct SetCardParser {}
+pub struct CardParser {}
 
-impl SetCardParser {
+impl CardParser {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl TryParse for SetCardParser {
+impl TryParse for CardParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
-        Ok(Box::new(SetCard::new(input.next_string()?)))
+        Ok(Box::new(Card::new(input.next_string()?)))
     }
 }

@@ -1,18 +1,18 @@
 use crate::commands::prelude::*;
 
-struct SetMove {
+struct Move {
     from: String,
     to: String,
     value: String,
 }
 
-impl SetMove {
+impl Move {
     pub fn new(from: String, to: String, value: String) -> Self {
         Self { from, to, value }
     }
 }
 
-impl Apply for SetMove {
+impl Apply for Move {
     fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         if !match store.get_if_kind(Kind::Set, &self.from) {
             IfKindResult::Matched(Value::Set(members)) => {
@@ -50,17 +50,17 @@ impl Apply for SetMove {
     }
 }
 
-pub struct SetMoveParser {}
+pub struct MoveParser {}
 
-impl SetMoveParser {
+impl MoveParser {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl TryParse for SetMoveParser {
+impl TryParse for MoveParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
-        Ok(Box::new(SetMove::new(
+        Ok(Box::new(Move::new(
             input.next_string()?,
             input.next_string()?,
             input.next_string()?,

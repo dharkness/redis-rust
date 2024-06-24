@@ -1,19 +1,19 @@
 use crate::commands::prelude::*;
-use crate::storage::{random_members, Random};
+use crate::storage::{Random, random_members};
 
-struct SetRandomMembers {
+struct RandomMembers {
     key: String,
     count: usize,
     dupes: bool,
 }
 
-impl SetRandomMembers {
+impl RandomMembers {
     pub fn new(key: String, count: usize, dupes: bool) -> Self {
         Self { key, count, dupes }
     }
 }
 
-impl Apply for SetRandomMembers {
+impl Apply for RandomMembers {
     fn apply<'a>(&self, store: &'a mut Store) -> Result<Response<'a>, Error> {
         match random_members(store, &self.key, self.count, self.dupes) {
             Random::Single(member) => Ok(Response::BulkString(member.clone())),
@@ -25,27 +25,27 @@ impl Apply for SetRandomMembers {
     }
 }
 
-pub struct SetRandomMembersParser {}
+pub struct RandomMembersParser {}
 
-impl SetRandomMembersParser {
+impl RandomMembersParser {
     pub fn new() -> Self {
         Self {}
     }
 }
 
-impl TryParse for SetRandomMembersParser {
+impl TryParse for RandomMembersParser {
     fn try_parse(&self, input: &mut Input) -> Result<Box<dyn Apply>, Error> {
         let key = input.next_string()?;
 
         if input.has_next() {
             let count = input.next_i64()?;
             if count < 0 {
-                Ok(Box::new(SetRandomMembers::new(key, -count as usize, true)))
+                Ok(Box::new(RandomMembers::new(key, -count as usize, true)))
             } else {
-                Ok(Box::new(SetRandomMembers::new(key, count as usize, false)))
+                Ok(Box::new(RandomMembers::new(key, count as usize, false)))
             }
         } else {
-            Ok(Box::new(SetRandomMembers::new(key, 1, false)))
+            Ok(Box::new(RandomMembers::new(key, 1, false)))
         }
     }
 }
