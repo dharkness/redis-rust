@@ -1,5 +1,7 @@
 use crate::commands::prelude::*;
 
+use super::{End, parse_end};
+
 struct Move {
     from: String,
     from_end: End,
@@ -91,23 +93,9 @@ impl TryParse for MoveParser {
 
         Ok(Box::new(Move::new(
             from,
-            parse_end(input)?,
+            parse_end(&input.next_token()?)?,
             to,
-            parse_end(input)?,
+            parse_end(&input.next_token()?)?,
         )))
-    }
-}
-
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum End {
-    Left,
-    Right,
-}
-
-fn parse_end(input: &mut Input) -> Result<End, Error> {
-    match input.next_token()?.as_str() {
-        "LEFT" => Ok(End::Left),
-        "RIGHT" => Ok(End::Right),
-        _ => Err(Error::Syntax),
     }
 }
