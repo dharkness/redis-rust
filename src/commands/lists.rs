@@ -3,6 +3,7 @@ pub mod insert;
 pub mod left_push;
 pub mod left_push_exists;
 pub mod len;
+pub mod r#move;
 pub mod position;
 pub mod range;
 pub mod remove;

@@ -72,6 +72,13 @@ impl Store {
         self.values.get(key).map(|value| value.kind())
     }
 
+    pub fn is_not_kind(&self, key: &str, kind: Kind) -> bool {
+        self.values
+            .get(key)
+            .map(|value| value.kind() != kind)
+            .unwrap_or(false)
+    }
+
     pub fn get(&self, key: &str) -> Option<&Value> {
         self.values.get(key)
     }
